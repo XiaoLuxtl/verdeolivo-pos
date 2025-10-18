@@ -7,17 +7,20 @@ export interface ModalProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
-  ({ className, open = false, onClose, children, ...props }, ref) => {
-    if (!open) return null;
+  ({ className, open, onClose, children, ...props }, ref) => {
+    // If open is explicitly set to false, don't render
+    if (open === false) return null;
+
+    const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      // Only close if clicking directly on the backdrop, not on child elements
+      if (e.target === e.currentTarget && onClose) {
+        onClose();
+      }
+    };
 
     return (
-      <div className="modal modal-open" onClick={onClose}>
-        <div
-          className={cn("modal-box", className)}
-          ref={ref}
-          onClick={(e) => e.stopPropagation()}
-          {...props}
-        >
+      <div className="modal modal-open" onClick={handleBackdropClick}>
+        <div className={cn("modal-box", className)} ref={ref} {...props}>
           {children}
         </div>
       </div>

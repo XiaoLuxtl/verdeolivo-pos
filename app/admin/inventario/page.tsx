@@ -11,6 +11,16 @@ import {
   Edit3,
 } from "lucide-react";
 import MovimientoForm from "@/components/MovimientoForm";
+import {
+  Button,
+  Badge,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+} from "@/components/ui";
 
 type Producto = {
   id: number;
@@ -86,10 +96,10 @@ export default function InventarioPage() {
     }
   };
 
-  const getBadgeClass = (cantidad: number) => {
-    if (cantidad === 0) return "badge-error";
-    if (cantidad < 100) return "badge-warning";
-    return "badge-success";
+  const getBadgeVariant = (cantidad: number) => {
+    if (cantidad === 0) return "error";
+    if (cantidad < 100) return "warning";
+    return "success";
   };
 
   const formatFecha = (fecha: string) => {
@@ -137,16 +147,16 @@ export default function InventarioPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-base-content">Inventario</h1>
-        <button
+        <Button
           onClick={() => {
             setSelectedProducto(undefined);
             setShowForm(true);
           }}
-          className="btn btn-primary"
+          variant="primary"
         >
           <Plus className="w-5 h-5 mr-2" />
           Registrar Movimiento
-        </button>
+        </Button>
       </div>
 
       {/* Estadísticas */}
@@ -202,30 +212,27 @@ export default function InventarioPage() {
       <div className="card bg-base-100 shadow-lg mb-6">
         <div className="card-body">
           <div className="flex gap-2">
-            <button
+            <Button
               onClick={() => setFilter("todos")}
-              className={`btn btn-sm ${
-                filter === "todos" ? "btn-primary" : "btn-ghost"
-              }`}
+              variant={filter === "todos" ? "primary" : "ghost"}
+              size="sm"
             >
               Todos
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setFilter("sin-stock")}
-              className={`btn btn-sm ${
-                filter === "sin-stock" ? "btn-error" : "btn-ghost"
-              }`}
+              variant={filter === "sin-stock" ? "error" : "ghost"}
+              size="sm"
             >
               Sin Stock
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setFilter("bajo")}
-              className={`btn btn-sm ${
-                filter === "bajo" ? "btn-warning" : "btn-ghost"
-              }`}
+              variant={filter === "bajo" ? "warning" : "ghost"}
+              size="sm"
             >
               Stock Bajo
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -241,44 +248,44 @@ export default function InventarioPage() {
               </h2>
             </div>
             <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-              <table className="table table-sm table-pin-rows">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Stock</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table zebra hover>
+                <Thead>
+                  <Tr>
+                    <Th>Producto</Th>
+                    <Th>Stock</Th>
+                    <Th></Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
                   {productosFiltrados.length === 0 ? (
-                    <tr>
-                      <td
+                    <Tr>
+                      <Td
                         colSpan={3}
                         className="text-center py-8 text-base-content/50"
                       >
                         No hay productos
-                      </td>
-                    </tr>
+                      </Td>
+                    </Tr>
                   ) : (
                     productosFiltrados.map((producto) => {
                       const stock = producto.inventario?.cantidadActual || 0;
                       return (
-                        <tr key={producto.id}>
-                          <td>
+                        <Tr key={producto.id}>
+                          <Td>
                             <div>
                               <p className="font-semibold">{producto.nombre}</p>
                               <p className="text-xs text-base-content/60">
                                 {producto.sku}
                               </p>
                             </div>
-                          </td>
-                          <td>
-                            <span className={`badge ${getBadgeClass(stock)}`}>
+                          </Td>
+                          <Td>
+                            <Badge variant={getBadgeVariant(stock)}>
                               {stock} {producto.unidad}
-                            </span>
-                          </td>
-                          <td>
-                            <button
+                            </Badge>
+                          </Td>
+                          <Td>
+                            <Button
                               onClick={() => {
                                 setSelectedProducto({
                                   id: producto.id,
@@ -286,18 +293,19 @@ export default function InventarioPage() {
                                 });
                                 setShowForm(true);
                               }}
-                              className="btn btn-ghost btn-xs"
+                              variant="ghost"
+                              size="sm"
                               title="Registrar movimiento"
                             >
                               <Edit3 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
+                            </Button>
+                          </Td>
+                        </Tr>
                       );
                     })
                   )}
-                </tbody>
-              </table>
+                </Tbody>
+              </Table>
             </div>
           </div>
         </div>

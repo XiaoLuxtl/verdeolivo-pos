@@ -3,6 +3,14 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import {
+  Button,
+  Input,
+  Select,
+  Modal,
+  ModalHeader,
+  ModalBody,
+} from "@/components/ui";
 
 type Producto = {
   id: number;
@@ -84,26 +92,26 @@ export default function MovimientoForm({
 
       onSave();
       onClose();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-base-100 rounded-lg shadow-xl max-w-2xl w-full">
-        <div className="flex items-center justify-between p-6 border-b border-base-300">
-          <h2 className="text-2xl font-bold text-base-content">
-            Registrar Movimiento
-          </h2>
-          <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Modal>
+      <ModalHeader>
+        <h2 className="text-2xl font-bold text-base-content">
+          Registrar Movimiento
+        </h2>
+        <Button type="button" onClick={onClose} variant="ghost" size="sm">
+          <X className="w-5 h-5" />
+        </Button>
+      </ModalHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+      <ModalBody>
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="alert alert-error">
               <span>{error}</span>
@@ -115,9 +123,8 @@ export default function MovimientoForm({
             <label className="label">
               <span className="label-text">Producto *</span>
             </label>
-            <select
+            <Select
               required
-              className="select select-bordered"
               value={formData.productoId}
               onChange={(e) =>
                 setFormData({ ...formData, productoId: e.target.value })
@@ -131,7 +138,7 @@ export default function MovimientoForm({
                   {p.unidad}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Tipo y Categoría */}
@@ -140,9 +147,8 @@ export default function MovimientoForm({
               <label className="label">
                 <span className="label-text">Tipo *</span>
               </label>
-              <select
+              <Select
                 required
-                className="select select-bordered"
                 value={formData.tipo}
                 onChange={(e) =>
                   setFormData({ ...formData, tipo: e.target.value })
@@ -150,16 +156,15 @@ export default function MovimientoForm({
               >
                 <option value="salida">Salida</option>
                 <option value="entrada">Entrada</option>
-              </select>
+              </Select>
             </div>
 
             <div className="form-control">
               <label className="label">
                 <span className="label-text">Categoría *</span>
               </label>
-              <select
+              <Select
                 required
-                className="select select-bordered"
                 value={formData.categoria}
                 onChange={(e) =>
                   setFormData({ ...formData, categoria: e.target.value })
@@ -167,7 +172,7 @@ export default function MovimientoForm({
               >
                 <option value="merma">Merma</option>
                 <option value="ajuste">Ajuste</option>
-              </select>
+              </Select>
             </div>
           </div>
 
@@ -176,11 +181,10 @@ export default function MovimientoForm({
             <label className="label">
               <span className="label-text">Cantidad *</span>
             </label>
-            <input
+            <Input
               type="number"
               step="0.01"
               required
-              className="input input-bordered"
               value={formData.cantidad}
               onChange={(e) =>
                 setFormData({ ...formData, cantidad: e.target.value })
@@ -228,28 +232,24 @@ export default function MovimientoForm({
           </div>
 
           <div className="flex gap-3 justify-end pt-4">
-            <button
+            <Button
               type="button"
               onClick={onClose}
-              className="btn btn-ghost"
+              variant="ghost"
               disabled={loading}
             >
               Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading}
-            >
+            </Button>
+            <Button type="submit" variant="primary" disabled={loading}>
               {loading ? (
                 <span className="loading loading-spinner"></span>
               ) : (
                 "Registrar Movimiento"
               )}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </ModalBody>
+    </Modal>
   );
 }

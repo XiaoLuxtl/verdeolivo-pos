@@ -132,8 +132,8 @@ export default function CompraForm({ onClose, onSave }: Props) {
 
       onSave();
       onClose();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
       setLoading(false);
     }
@@ -334,7 +334,8 @@ export default function CompraForm({ onClose, onSave }: Props) {
 
               {detalles.length === 0 && (
                 <div className="text-center py-8 text-base-content/50">
-                  No hay productos agregados. Click en "Agregar Producto"
+                  No hay productos agregados. Click en &quot;Agregar
+                  Producto&quot;
                 </div>
               )}
             </div>

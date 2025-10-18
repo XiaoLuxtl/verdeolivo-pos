@@ -5,6 +5,15 @@ import { Plus, Pencil, Trash2, List, Search } from "lucide-react";
 import RecetaForm from "@/components/RecetaForm";
 import IngredientesModal from "@/components/IngredientesModal";
 import DeleteConfirmation from "@/components/DeleteConfirmation";
+import {
+  Button,
+  Input,
+  Badge,
+  Card,
+  CardBody,
+  CardTitle,
+  CardActions,
+} from "@/components/ui";
 
 type Receta = {
   id: number;
@@ -102,10 +111,15 @@ export default function RecetasPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-base-content">Recetas</h1>
-        <button onClick={() => setShowForm(true)} className="btn btn-primary">
+        <Button
+          type="button"
+          size="xs"
+          onClick={() => setShowForm(true)}
+          variant="primary"
+        >
           <Plus className="w-5 h-5 mr-2" />
           Nueva Receta
-        </button>
+        </Button>
       </div>
 
       {/* Buscador */}
@@ -116,10 +130,9 @@ export default function RecetasPage() {
               <span className="bg-base-200">
                 <Search className="w-5 h-5" />
               </span>
-              <input
+              <Input
                 type="text"
                 placeholder="Buscar recetas..."
-                className="input input-bordered w-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -136,10 +149,7 @@ export default function RecetasPage() {
           </div>
         ) : (
           filteredRecetas.map((receta) => (
-            <div
-              key={receta.id}
-              className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow"
-            >
+            <Card key={receta.id} className="hover:shadow-xl transition-shadow">
               {/* Imagen */}
               <figure className="h-48 bg-base-200">
                 {receta.imagen ? (
@@ -155,8 +165,8 @@ export default function RecetasPage() {
                 )}
               </figure>
 
-              <div className="card-body">
-                <h2 className="card-title text-lg">{receta.nombre}</h2>
+              <CardBody>
+                <CardTitle className="text-lg">{receta.nombre}</CardTitle>
 
                 {receta.descripcion && (
                   <p className="text-sm text-base-content/60 line-clamp-2">
@@ -168,39 +178,45 @@ export default function RecetasPage() {
                   <span className="text-2xl font-bold text-primary">
                     ${receta.precioVenta.toFixed(2)}
                   </span>
-                  <span className="badge badge-secondary">
+                  <Badge variant="secondary">
                     {receta.ingredientes.length} ingredientes
-                  </span>
+                  </Badge>
                 </div>
 
-                <div className="card-actions justify-end mt-4">
-                  <button
+                <CardActions className="justify-end mt-4">
+                  <Button
+                    type="button"
                     onClick={() => handleShowIngredientes(receta)}
-                    className="btn btn-sm btn-ghost"
+                    variant="ghost"
+                    size="sm"
                     title="Ver ingredientes"
                   >
                     <List className="w-4 h-4" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    type="button"
                     onClick={() => handleEdit(receta)}
-                    className="btn btn-sm btn-ghost"
+                    variant="ghost"
+                    size="sm"
                     title="Editar"
                   >
                     <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    type="button"
                     onClick={() => {
                       setRecetaToDelete(receta);
                       setShowDeleteConfirm(true);
                     }}
-                    className="btn btn-sm btn-ghost text-error"
+                    variant="ghost"
+                    size="sm"
                     title="Eliminar"
                   >
                     <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
+                  </Button>
+                </CardActions>
+              </CardBody>
+            </Card>
           ))
         )}
       </div>

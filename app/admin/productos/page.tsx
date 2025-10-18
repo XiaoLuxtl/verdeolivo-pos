@@ -4,6 +4,17 @@ import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import ProductoForm from "@/components/ProductoForm";
 import DeleteConfirmation from "@/components/DeleteConfirmation";
+import {
+  Button,
+  Input,
+  Badge,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+} from "@/components/ui";
 
 type Producto = {
   id: number;
@@ -107,10 +118,10 @@ export default function ProductosPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-base-content">Productos</h1>
-        <button onClick={() => setShowForm(true)} className="btn btn-primary">
+        <Button onClick={() => setShowForm(true)} variant="primary">
           <Plus className="w-5 h-5 mr-2" />
           Nuevo Producto
-        </button>
+        </Button>
       </div>
 
       {/* Buscador */}
@@ -121,10 +132,9 @@ export default function ProductosPage() {
               <span className="bg-base-200">
                 <Search className="w-5 h-5" />
               </span>
-              <input
+              <Input
                 type="text"
                 placeholder="Buscar por nombre, SKU o sabor..."
-                className="input input-bordered w-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -137,73 +147,75 @@ export default function ProductosPage() {
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body p-0">
           <div className="overflow-x-auto">
-            <table className="table table-zebra">
-              <thead>
-                <tr>
-                  <th>SKU</th>
-                  <th>Nombre</th>
-                  <th>Sabor</th>
-                  <th>Precio</th>
-                  <th>Stock</th>
-                  <th>Unidad</th>
-                  <th>Proveedor</th>
-                  <th className="text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table zebra hover>
+              <Thead>
+                <Tr>
+                  <Th>SKU</Th>
+                  <Th>Nombre</Th>
+                  <Th>Sabor</Th>
+                  <Th>Precio</Th>
+                  <Th>Stock</Th>
+                  <Th>Unidad</Th>
+                  <Th>Proveedor</Th>
+                  <Th className="text-right">Acciones</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
                 {filteredProductos.length === 0 ? (
-                  <tr>
-                    <td
+                  <Tr>
+                    <Td
                       colSpan={8}
                       className="text-center py-8 text-base-content/50"
                     >
                       No hay productos registrados
-                    </td>
-                  </tr>
+                    </Td>
+                  </Tr>
                 ) : (
                   filteredProductos.map((producto) => (
-                    <tr key={producto.id}>
-                      <td className="font-mono">{producto.sku}</td>
-                      <td className="font-semibold">{producto.nombre}</td>
-                      <td>{producto.sabor || "-"}</td>
-                      <td>${producto.precioUnitario.toFixed(2)}</td>
-                      <td>
-                        <span
-                          className={`badge ${
+                    <Tr key={producto.id}>
+                      <Td className="font-mono">{producto.sku}</Td>
+                      <Td className="font-semibold">{producto.nombre}</Td>
+                      <Td>{producto.sabor || "-"}</Td>
+                      <Td>${producto.precioUnitario.toFixed(2)}</Td>
+                      <Td>
+                        <Badge
+                          variant={
                             (producto.inventario?.cantidadActual || 0) > 0
-                              ? "badge-success"
-                              : "badge-error"
-                          }`}
+                              ? "success"
+                              : "error"
+                          }
                         >
                           {producto.inventario?.cantidadActual || 0}
-                        </span>
-                      </td>
-                      <td>{producto.unidad}</td>
-                      <td>{producto.proveedor || "-"}</td>
-                      <td>
+                        </Badge>
+                      </Td>
+                      <Td>{producto.unidad}</Td>
+                      <Td>{producto.proveedor || "-"}</Td>
+                      <Td>
                         <div className="flex gap-2 justify-end">
-                          <button
+                          <Button
                             onClick={() => handleEdit(producto)}
-                            className="btn btn-ghost btn-sm"
+                            variant="ghost"
+                            size="sm"
                           >
                             <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             onClick={() => {
                               setProductoToDelete(producto);
                               setShowDeleteConfirm(true);
                             }}
-                            className="btn btn-ghost btn-sm text-error"
+                            variant="ghost"
+                            size="sm"
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
+                          </Button>
                         </div>
-                      </td>
-                    </tr>
+                      </Td>
+                    </Tr>
                   ))
                 )}
-              </tbody>
-            </table>
+              </Tbody>
+            </Table>
           </div>
         </div>
       </div>

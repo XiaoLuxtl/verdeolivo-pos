@@ -1,4 +1,6 @@
 import { Package, Warehouse, ChefHat, ShoppingCart } from "lucide-react";
+import { Card, CardBody } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 export default function AdminDashboard() {
   return (
@@ -7,8 +9,8 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card Productos */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
+        <Card>
+          <CardBody>
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="card-title text-base-content">Productos</h2>
@@ -16,12 +18,12 @@ export default function AdminDashboard() {
               </div>
               <Package className="w-12 h-12 text-primary opacity-50" />
             </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
 
         {/* Card Inventario */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
+        <Card>
+          <CardBody>
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="card-title text-base-content">Items en Stock</h2>
@@ -29,12 +31,12 @@ export default function AdminDashboard() {
               </div>
               <Warehouse className="w-12 h-12 text-secondary opacity-50" />
             </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
 
         {/* Card Recetas */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
+        <Card>
+          <CardBody>
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="card-title text-base-content">Recetas</h2>
@@ -42,12 +44,12 @@ export default function AdminDashboard() {
               </div>
               <ChefHat className="w-12 h-12 text-accent opacity-50" />
             </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
 
         {/* Card Ventas Hoy */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
+        <Card>
+          <CardBody>
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="card-title text-base-content">Ventas Hoy</h2>
@@ -55,8 +57,8 @@ export default function AdminDashboard() {
               </div>
               <ShoppingCart className="w-12 h-12 text-success opacity-50" />
             </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
       </div>
 
       {/* Sección de acceso rápido */}
@@ -65,17 +67,23 @@ export default function AdminDashboard() {
           Acceso Rápido
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a href="/admin/productos" className="btn btn-primary btn-lg">
-            <Package className="w-5 h-5 mr-2" />
-            Gestionar Productos
+          <a href="/admin/productos">
+            <Button variant="primary" size="lg">
+              <Package className="w-5 h-5 mr-2" />
+              Gestionar Productos
+            </Button>
           </a>
-          <a href="/admin/recetas" className="btn btn-secondary btn-lg">
-            <ChefHat className="w-5 h-5 mr-2" />
-            Gestionar Recetas
+          <a href="/admin/recetas">
+            <Button variant="secondary" size="lg">
+              <ChefHat className="w-5 h-5 mr-2" />
+              Gestionar Recetas
+            </Button>
           </a>
-          <a href="/admin/compras" className="btn btn-accent btn-lg">
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            Registrar Compra
+          <a href="/admin/compras">
+            <Button variant="accent" size="lg">
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              Registrar Compra
+            </Button>
           </a>
         </div>
       </div>

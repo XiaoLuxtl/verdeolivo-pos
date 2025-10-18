@@ -19,25 +19,26 @@ export interface ButtonProps
   shape?: "square" | "circle";
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "md", shape, ...props }, ref) => {
-    const classes = ["btn"];
+function Button({
+  className,
+  variant = "default",
+  size = "md",
+  shape,
+  ...props
+}: ButtonProps) {
+  const classes = ["btn", "cursor-pointer"];
 
-    if (variant && variant !== "default") {
-      classes.push(`btn-${variant}`);
-    }
-    if (size && size !== "md") {
-      classes.push(`btn-${size}`);
-    }
-    if (shape) {
-      classes.push(`btn-${shape}`);
-    }
-
-    return (
-      <button className={cn(...classes, className)} ref={ref} {...props} />
-    );
+  if (variant && variant !== "default") {
+    classes.push(`btn-${variant}`);
   }
-);
-Button.displayName = "Button";
+  if (size && size !== "md") {
+    classes.push(`btn-${size}`);
+  }
+  if (shape) {
+    classes.push(`btn-${shape}`);
+  }
+
+  return <button className={cn(...classes, className)} {...props} />;
+}
 
 export { Button };

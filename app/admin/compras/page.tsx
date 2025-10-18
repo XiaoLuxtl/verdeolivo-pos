@@ -4,6 +4,18 @@
 import { useState, useEffect } from "react";
 import { Plus, Eye, Package } from "lucide-react";
 import CompraForm from "@/components/CompraForm";
+import { Button } from "@/components/ui/Button";
+import { Card, CardBody } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Loading } from "@/components/ui/Loading";
+import { Alert } from "@/components/ui/Alert";
+import { Table, Thead, Tbody, Tr, Th, Td } from "@/components/ui/Table";
+import {
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalActions,
+} from "@/components/ui/Modal";
 
 type Compra = {
   id: number;
@@ -58,7 +70,7 @@ export default function ComprasPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
+        <Loading size="lg" />
       </div>
     );
   }
@@ -67,22 +79,22 @@ export default function ComprasPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-base-content">Compras</h1>
-        <button onClick={() => setShowForm(true)} className="btn btn-primary">
+        <Button onClick={() => setShowForm(true)} variant="primary">
           <Plus className="w-5 h-5 mr-2" />
           Nueva Compra
-        </button>
+        </Button>
       </div>
 
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
+        <Card>
+          <CardBody>
             <h3 className="text-sm text-base-content/60">Total Compras</h3>
             <p className="text-3xl font-bold text-primary">{compras.length}</p>
-          </div>
-        </div>
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody>
             <h3 className="text-sm text-base-content/60">Este Mes</h3>
             <p className="text-3xl font-bold text-secondary">
               $
@@ -93,79 +105,80 @@ export default function ComprasPage() {
                 .reduce((sum, c) => sum + c.total, 0)
                 .toFixed(2)}
             </p>
-          </div>
-        </div>
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody>
             <h3 className="text-sm text-base-content/60">Total General</h3>
             <p className="text-3xl font-bold text-accent">
               ${compras.reduce((sum, c) => sum + c.total, 0).toFixed(2)}
             </p>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
       </div>
 
       {/* Tabla de compras */}
-      <div className="card bg-base-100 shadow-lg">
-        <div className="card-body p-0">
+      <Card>
+        <CardBody className="p-0">
           <div className="overflow-x-auto">
-            <table className="table table-zebra">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Fecha</th>
-                  <th>Proveedor</th>
-                  <th>Productos</th>
-                  <th>Total</th>
-                  <th className="text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>ID</Th>
+                  <Th>Fecha</Th>
+                  <Th>Proveedor</Th>
+                  <Th>Productos</Th>
+                  <Th>Total</Th>
+                  <Th className="text-right">Acciones</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
                 {compras.length === 0 ? (
-                  <tr>
-                    <td
+                  <Tr>
+                    <Td
                       colSpan={6}
                       className="text-center py-8 text-base-content/50"
                     >
                       No hay compras registradas
-                    </td>
-                  </tr>
+                    </Td>
+                  </Tr>
                 ) : (
                   compras.map((compra) => (
-                    <tr key={compra.id}>
-                      <td className="font-mono">#{compra.id}</td>
-                      <td>{formatFecha(compra.fecha)}</td>
-                      <td className="font-semibold">{compra.proveedor}</td>
-                      <td>
-                        <span className="badge badge-primary">
+                    <Tr key={compra.id}>
+                      <Td className="font-mono">#{compra.id}</Td>
+                      <Td>{formatFecha(compra.fecha)}</Td>
+                      <Td className="font-semibold">{compra.proveedor}</Td>
+                      <Td>
+                        <Badge variant="primary">
                           {compra.detalles.length} item(s)
-                        </span>
-                      </td>
-                      <td className="font-bold text-success">
+                        </Badge>
+                      </Td>
+                      <Td className="font-bold text-success">
                         ${compra.total.toFixed(2)}
-                      </td>
-                      <td>
+                      </Td>
+                      <Td>
                         <div className="flex gap-2 justify-end">
-                          <button
+                          <Button
                             onClick={() => {
                               setSelectedCompra(compra);
                               setShowDetalle(true);
                             }}
-                            className="btn btn-ghost btn-sm"
+                            variant="ghost"
+                            size="sm"
                             title="Ver detalles"
                           >
                             <Eye className="w-4 h-4" />
-                          </button>
+                          </Button>
                         </div>
-                      </td>
-                    </tr>
+                      </Td>
+                    </Tr>
                   ))
                 )}
-              </tbody>
-            </table>
+              </Tbody>
+            </Table>
           </div>
-        </div>
-      </div>
+        </CardBody>
+      </Card>
 
       {/* Formulario de nueva compra */}
       {showForm && (
@@ -174,70 +187,73 @@ export default function ComprasPage() {
 
       {/* Modal de detalle */}
       {showDetalle && selectedCompra && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-base-100 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-base-300">
-              <h2 className="text-2xl font-bold">
-                Detalle de Compra #{selectedCompra.id}
-              </h2>
-              <p className="text-sm text-base-content/60 mt-1">
-                {formatFecha(selectedCompra.fecha)} - {selectedCompra.proveedor}
-              </p>
-            </div>
+        <Modal
+          open={true}
+          onClose={() => {
+            setShowDetalle(false);
+            setSelectedCompra(null);
+          }}
+        >
+          <ModalHeader>
+            <h2 className="text-2xl font-bold">
+              Detalle de Compra #{selectedCompra.id}
+            </h2>
+            <p className="text-sm text-base-content/60 mt-1">
+              {formatFecha(selectedCompra.fecha)} - {selectedCompra.proveedor}
+            </p>
+          </ModalHeader>
 
-            <div className="p-6 space-y-4">
-              {selectedCompra.notas && (
-                <div className="alert alert-info">
-                  <span>{selectedCompra.notas}</span>
-                </div>
-              )}
+          <ModalBody>
+            {selectedCompra.notas && (
+              <Alert variant="info">
+                <span>{selectedCompra.notas}</span>
+              </Alert>
+            )}
 
-              <div className="space-y-2">
-                {selectedCompra.detalles.map((detalle) => (
-                  <div
-                    key={detalle.id}
-                    className="flex items-center justify-between p-4 bg-base-200 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Package className="w-5 h-5 text-primary" />
-                      <div>
-                        <p className="font-semibold">
-                          {detalle.producto.nombre}
-                        </p>
-                        <p className="text-sm text-base-content/60">
-                          {detalle.cantidad} {detalle.producto.unidad} × $
-                          {detalle.costoUnitario.toFixed(2)}
-                        </p>
-                      </div>
+            <div className="space-y-2">
+              {selectedCompra.detalles.map((detalle) => (
+                <div
+                  key={detalle.id}
+                  className="flex items-center justify-between p-4 bg-base-200 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <Package className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="font-semibold">{detalle.producto.nombre}</p>
+                      <p className="text-sm text-base-content/60">
+                        {detalle.cantidad} {detalle.producto.unidad} × $
+                        {detalle.costoUnitario.toFixed(2)}
+                      </p>
                     </div>
-                    <span className="text-lg font-bold">
-                      ${detalle.subtotal.toFixed(2)}
-                    </span>
                   </div>
-                ))}
-              </div>
-
-              <div className="border-t border-base-300 pt-4 flex justify-between items-center">
-                <span className="text-xl font-semibold">Total:</span>
-                <span className="text-3xl font-bold text-primary">
-                  ${selectedCompra.total.toFixed(2)}
-                </span>
-              </div>
+                  <span className="text-lg font-bold">
+                    ${detalle.subtotal.toFixed(2)}
+                  </span>
+                </div>
+              ))}
             </div>
 
-            <div className="p-6 border-t border-base-300">
-              <button
-                onClick={() => {
-                  setShowDetalle(false);
-                  setSelectedCompra(null);
-                }}
-                className="btn btn-primary w-full"
-              >
-                Cerrar
-              </button>
+            <div className="border-t border-base-300 pt-4 flex justify-between items-center">
+              <span className="text-xl font-semibold">Total:</span>
+              <span className="text-3xl font-bold text-primary">
+                ${selectedCompra.total.toFixed(2)}
+              </span>
             </div>
-          </div>
-        </div>
+          </ModalBody>
+
+          <ModalActions>
+            <Button
+              onClick={() => {
+                setShowDetalle(false);
+                setSelectedCompra(null);
+              }}
+              variant="primary"
+              className="w-full"
+            >
+              Cerrar
+            </Button>
+          </ModalActions>
+        </Modal>
       )}
     </div>
   );

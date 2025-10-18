@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Upload, X } from "lucide-react";
+import { Button } from "@/components/ui";
 
 type Props = {
   value: string | null;
@@ -58,13 +59,15 @@ export default function ImageUpload({ value, onChange }: Props) {
             alt="Preview"
             className="w-full h-full object-cover rounded-lg border-2 border-base-300"
           />
-          <button
+          <Button
             type="button"
             onClick={handleRemove}
-            className="btn btn-error btn-circle btn-sm absolute top-2 right-2"
+            variant="error"
+            size="sm"
+            className="absolute top-2 right-2 rounded-full w-8 h-8 p-0"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       ) : (
         <div

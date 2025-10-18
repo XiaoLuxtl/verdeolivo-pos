@@ -7,11 +7,22 @@ import {
   ShoppingCart,
   DollarSign,
   Package,
-  Calendar,
   Download,
   AlertTriangle,
   BarChart3,
 } from "lucide-react";
+import {
+  Button,
+  Badge,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Card,
+  CardBody,
+} from "@/components/ui";
 
 type ReporteVentas = {
   periodo: string;
@@ -120,10 +131,10 @@ export default function ReportesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-base-content">Reportes</h1>
-        <button className="btn btn-outline">
+        <Button variant="outline">
           <Download className="w-5 h-5 mr-2" />
           Exportar PDF
-        </button>
+        </Button>
       </div>
 
       {/* SECCIÓN: VENTAS */}
@@ -135,23 +146,22 @@ export default function ReportesPage() {
           </h2>
           <div className="flex gap-2">
             {["dia", "semana", "mes", "3meses"].map((p) => (
-              <button
+              <Button
                 key={p}
                 onClick={() => setPeriodoVentas(p)}
-                className={`btn btn-sm ${
-                  periodoVentas === p ? "btn-primary" : "btn-ghost"
-                }`}
+                variant={periodoVentas === p ? "primary" : "ghost"}
+                size="sm"
               >
                 {getPeriodoLabel(p)}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
 
         {/* Estadísticas principales */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="card bg-gradient-to-br from-primary to-primary-focus text-primary-content shadow-lg">
-            <div className="card-body">
+          <Card className="bg-gradient-to-br from-primary to-primary-focus text-primary-content shadow-lg">
+            <CardBody>
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm opacity-90">Total Ventas</h3>
@@ -161,11 +171,11 @@ export default function ReportesPage() {
                 </div>
                 <ShoppingCart className="w-12 h-12 opacity-50" />
               </div>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
 
-          <div className="card bg-gradient-to-br from-success to-success-focus text-success-content shadow-lg">
-            <div className="card-body">
+          <Card className="bg-gradient-to-br from-success to-success-focus text-success-content shadow-lg">
+            <CardBody>
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm opacity-90">Ingresos Totales</h3>
@@ -175,11 +185,11 @@ export default function ReportesPage() {
                 </div>
                 <DollarSign className="w-12 h-12 opacity-50" />
               </div>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
 
-          <div className="card bg-gradient-to-br from-secondary to-secondary-focus text-secondary-content shadow-lg">
-            <div className="card-body">
+          <Card className="bg-gradient-to-br from-secondary to-secondary-focus text-secondary-content shadow-lg">
+            <CardBody>
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm opacity-90">Promedio por Venta</h3>
@@ -189,58 +199,56 @@ export default function ReportesPage() {
                 </div>
                 <TrendingUp className="w-12 h-12 opacity-50" />
               </div>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
         </div>
 
         {/* Top recetas */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
+        <Card className="bg-base-100 shadow-lg">
+          <CardBody>
             <h3 className="card-title flex items-center gap-2">
               <BarChart3 className="w-5 h-5" />
               Recetas Más Vendidas
             </h3>
             <div className="overflow-x-auto">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Receta</th>
-                    <th>Cantidad</th>
-                    <th>Ingresos</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table zebra hover>
+                <Thead>
+                  <Tr>
+                    <Th>#</Th>
+                    <Th>Receta</Th>
+                    <Th>Cantidad</Th>
+                    <Th>Ingresos</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
                   {reporteVentas?.topRecetas.length === 0 ? (
-                    <tr>
-                      <td
+                    <Tr>
+                      <Td
                         colSpan={4}
                         className="text-center py-8 text-base-content/50"
                       >
                         No hay datos de ventas en este periodo
-                      </td>
-                    </tr>
+                      </Td>
+                    </Tr>
                   ) : (
                     reporteVentas?.topRecetas.map((receta, index) => (
-                      <tr key={index}>
-                        <td className="font-bold">{index + 1}</td>
-                        <td className="font-semibold">{receta.nombre}</td>
-                        <td>
-                          <span className="badge badge-primary">
-                            {receta.cantidad}
-                          </span>
-                        </td>
-                        <td className="font-bold text-success">
+                      <Tr key={`receta-${receta.nombre}-${index}`}>
+                        <Td className="font-bold">{index + 1}</Td>
+                        <Td className="font-semibold">{receta.nombre}</Td>
+                        <Td>
+                          <Badge variant="primary">{receta.cantidad}</Badge>
+                        </Td>
+                        <Td className="font-bold text-success">
                           ${receta.ingresos.toFixed(2)}
-                        </td>
-                      </tr>
+                        </Td>
+                      </Tr>
                     ))
                   )}
-                </tbody>
-              </table>
+                </Tbody>
+              </Table>
             </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
       </div>
 
       {/* SECCIÓN: INVENTARIO */}
@@ -252,64 +260,63 @@ export default function ReportesPage() {
           </h2>
           <div className="flex gap-2">
             {["semana", "mes", "3meses"].map((p) => (
-              <button
+              <Button
                 key={p}
                 onClick={() => setPeriodoInventario(p)}
-                className={`btn btn-sm ${
-                  periodoInventario === p ? "btn-secondary" : "btn-ghost"
-                }`}
+                variant={periodoInventario === p ? "secondary" : "ghost"}
+                size="sm"
               >
                 {getPeriodoLabel(p)}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
 
         {/* Estadísticas de inventario */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
+          <Card className="bg-base-100 shadow-lg">
+            <CardBody>
               <h3 className="text-sm text-base-content/60">
                 Productos Totales
               </h3>
               <p className="text-3xl font-bold text-primary">
                 {reporteInventario?.resumen.totalProductos || 0}
               </p>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
 
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
+          <Card className="bg-base-100 shadow-lg">
+            <CardBody>
               <h3 className="text-sm text-base-content/60">Sin Stock</h3>
               <p className="text-3xl font-bold text-error">
                 {reporteInventario?.resumen.sinStock || 0}
               </p>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
 
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
+          <Card className="bg-base-100 shadow-lg">
+            <CardBody>
               <h3 className="text-sm text-base-content/60">Stock Bajo</h3>
               <p className="text-3xl font-bold text-warning">
                 {reporteInventario?.resumen.stockBajo || 0}
               </p>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
 
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
+          <Card className="bg-base-100 shadow-lg">
+            <CardBody>
               <h3 className="text-sm text-base-content/60">Movimientos</h3>
               <p className="text-3xl font-bold text-info">
                 {reporteInventario?.resumen.totalMovimientos || 0}
               </p>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Movimientos por categoría */}
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
+          <Card className="bg-base-100 shadow-lg">
+            <CardBody>
               <h3 className="card-title">Movimientos por Categoría</h3>
               <div className="space-y-3">
                 {reporteInventario?.movimientosPorCategoria.map((cat) => (
@@ -333,12 +340,12 @@ export default function ReportesPage() {
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
 
           {/* Alertas */}
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
+          <Card className="bg-base-100 shadow-lg">
+            <CardBody>
               <h3 className="card-title flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-warning" />
                 Alertas de Inventario
@@ -371,59 +378,57 @@ export default function ReportesPage() {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
+            </CardBody>
+          </Card>
         </div>
 
         {/* Productos más movidos */}
-        <div className="card bg-base-100 shadow-lg mt-6">
-          <div className="card-body">
+        <Card className="bg-base-100 shadow-lg mt-6">
+          <CardBody>
             <h3 className="card-title">Productos con Más Movimientos</h3>
             <div className="overflow-x-auto">
-              <table className="table table-sm">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Movimientos</th>
-                    <th>Entradas</th>
-                    <th>Salidas</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table zebra hover>
+                <Thead>
+                  <Tr>
+                    <Th>Producto</Th>
+                    <Th>Movimientos</Th>
+                    <Th>Entradas</Th>
+                    <Th>Salidas</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
                   {reporteInventario?.productosMasMovidos.length === 0 ? (
-                    <tr>
-                      <td
+                    <Tr>
+                      <Td
                         colSpan={4}
                         className="text-center py-8 text-base-content/50"
                       >
                         No hay movimientos en este periodo
-                      </td>
-                    </tr>
+                      </Td>
+                    </Tr>
                   ) : (
                     reporteInventario?.productosMasMovidos.map(
                       (prod, index) => (
-                        <tr key={index}>
-                          <td className="font-semibold">{prod.nombre}</td>
-                          <td>
-                            <span className="badge badge-primary">
-                              {prod.movimientos}
-                            </span>
-                          </td>
-                          <td className="text-success">
+                        <Tr key={`producto-${prod.nombre}-${index}`}>
+                          <Td className="font-semibold">{prod.nombre}</Td>
+                          <Td>
+                            <Badge variant="primary">{prod.movimientos}</Badge>
+                          </Td>
+                          <Td className="text-success">
                             +{prod.entradas.toFixed(2)}
-                          </td>
-                          <td className="text-error">
+                          </Td>
+                          <Td className="text-error">
                             -{prod.salidas.toFixed(2)}
-                          </td>
-                        </tr>
+                          </Td>
+                        </Tr>
                       )
                     )
                   )}
-                </tbody>
-              </table>
+                </Tbody>
+              </Table>
             </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
       </div>
     </div>
   );

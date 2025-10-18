@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import ImageUpload from "./ImageUpload";
+import { Button, Input, Modal, ModalHeader, ModalBody } from "@/components/ui";
 
 type Receta = {
   id?: number;
@@ -57,26 +58,26 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
 
       onSave();
       onClose();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-base-100 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-base-300">
-          <h2 className="text-2xl font-bold text-base-content">
-            {receta?.id ? "Editar Receta" : "Nueva Receta"}
-          </h2>
-          <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Modal>
+      <ModalHeader>
+        <h2 className="text-2xl font-bold text-base-content">
+          {receta?.id ? "Editar Receta" : "Nueva Receta"}
+        </h2>
+        <Button type="button" onClick={onClose} variant="ghost" size="sm">
+          <X className="w-5 h-5" />
+        </Button>
+      </ModalHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+      <ModalBody>
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="alert alert-error">
               <span>{error}</span>
@@ -94,10 +95,9 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
             <label className="label">
               <span className="label-text">Nombre de la Receta *</span>
             </label>
-            <input
+            <Input
               type="text"
               required
-              className="input input-bordered"
               value={formData.nombre}
               onChange={(e) =>
                 setFormData({ ...formData, nombre: e.target.value })
@@ -111,11 +111,10 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
             <label className="label">
               <span className="label-text">Precio de Venta *</span>
             </label>
-            <input
+            <Input
               type="number"
               step="0.01"
               required
-              className="input input-bordered"
               value={formData.precioVenta}
               onChange={(e) =>
                 setFormData({ ...formData, precioVenta: e.target.value })
@@ -147,19 +146,15 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
           </div>
 
           <div className="flex gap-3 justify-end pt-4">
-            <button
+            <Button
               type="button"
               onClick={onClose}
-              className="btn btn-ghost"
+              variant="ghost"
               disabled={loading}
             >
               Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading}
-            >
+            </Button>
+            <Button type="submit" variant="primary" disabled={loading}>
               {loading ? (
                 <span className="loading loading-spinner"></span>
               ) : receta?.id ? (
@@ -167,10 +162,10 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
               ) : (
                 "Crear Receta"
               )}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </ModalBody>
+    </Modal>
   );
 }

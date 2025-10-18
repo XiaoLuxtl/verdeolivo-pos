@@ -13,13 +13,31 @@ import {
 import { CartItem } from "@/types/cart";
 import CheckoutModal from "@/components/CheckoutModal";
 import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+import { Card, CardBody, CardTitle } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Loading } from "@/components/ui/Loading";
+import { Alert } from "@/components/ui/Alert";
+
+type RecetaIngrediente = {
+  id: number;
+  recetaId: number;
+  productoId: number;
+  cantidad: number;
+  unidad: string;
+  producto: {
+    id: number;
+    nombre: string;
+    sku: string;
+  };
+};
 
 type Receta = {
   id: number;
   nombre: string;
   precioVenta: number;
   imagen: string | null;
-  ingredientes: any[];
+  ingredientes: RecetaIngrediente[];
 };
 
 export default function POSPage() {
@@ -126,7 +144,7 @@ export default function POSPage() {
       setTimeout(() => {
         setShowSuccess(false);
       }, 3000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw error;
     }
   };
@@ -134,7 +152,7 @@ export default function POSPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-base-200">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
+        <Loading size="lg" />
       </div>
     );
   }
@@ -147,27 +165,29 @@ export default function POSPage() {
           <h1 className="text-4xl font-bold text-base-content">
             Punto de Venta — Verde Olivo
           </h1>
-          <Link href="/admin" className="btn btn-ghost">
-            <Settings className="w-5 h-5 mr-2" />
-            Admin
+          <Link href="/admin">
+            <Button variant="ghost">
+              <Settings className="w-5 h-5 mr-2" />
+              Admin
+            </Button>
           </Link>
         </div>
 
         {recetas.length === 0 ? (
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body items-center text-center py-20">
-              <h2 className="card-title text-2xl mb-4">
+          <Card>
+            <CardBody className="items-center text-center py-20">
+              <CardTitle className="text-2xl mb-4">
                 No hay recetas disponibles
-              </h2>
+              </CardTitle>
               <p className="text-base-content/70 mb-4">
                 Crea recetas desde el panel de administración para comenzar a
                 vender.
               </p>
-              <Link href="/admin/recetas" className="btn btn-primary">
-                Ir a Recetas
+              <Link href="/admin/recetas">
+                <Button variant="primary">Ir a Recetas</Button>
               </Link>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {recetas.map((receta) => (
@@ -209,7 +229,7 @@ export default function POSPage() {
           <div className="flex items-center gap-2">
             <ShoppingCart className="w-6 h-6 text-primary" />
             <h2 className="text-2xl font-bold">Carrito</h2>
-            <span className="badge badge-primary">{cart.length}</span>
+            <Badge variant="primary">{cart.length}</Badge>
           </div>
         </div>
 
@@ -228,35 +248,40 @@ export default function POSPage() {
                     <h3 className="font-semibold text-sm flex-1">
                       {item.nombre}
                     </h3>
-                    <button
+                    <Button
                       onClick={() => removeFromCart(item.recetaId)}
-                      className="btn btn-ghost btn-xs btn-circle"
+                      variant="ghost"
+                      size="xs"
+                      shape="circle"
                     >
                       <Trash2 className="w-4 h-4 text-error" />
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <button
+                      <Button
                         onClick={() =>
                           updateQuantity(item.recetaId, item.cantidad - 1)
                         }
-                        className="btn btn-sm btn-circle"
+                        size="sm"
+                        shape="circle"
                       >
                         <Minus className="w-4 h-4" />
-                      </button>
+                      </Button>
                       <span className="font-bold text-lg w-8 text-center">
                         {item.cantidad}
                       </span>
-                      <button
+                      <Button
                         onClick={() =>
                           updateQuantity(item.recetaId, item.cantidad + 1)
                         }
-                        className="btn btn-sm btn-circle btn-primary"
+                        size="sm"
+                        shape="circle"
+                        variant="primary"
                       >
                         <Plus className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </div>
                     <span className="font-bold text-lg">
                       ${(item.precio * item.cantidad).toFixed(2)}
@@ -274,13 +299,15 @@ export default function POSPage() {
               <span>Total:</span>
               <span className="text-primary">${getTotal().toFixed(2)}</span>
             </div>
-            <button
+            <Button
               onClick={() => setShowCheckout(true)}
-              className="btn btn-primary btn-lg w-full"
+              variant="primary"
+              size="lg"
+              className="w-full"
             >
               <ShoppingCart className="w-5 h-5 mr-2" />
               Cobrar
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -298,10 +325,10 @@ export default function POSPage() {
       {/* Toast de éxito */}
       {showSuccess && (
         <div className="toast toast-top toast-center z-50">
-          <div className="alert alert-success">
+          <Alert variant="success">
             <CheckCircle className="w-6 h-6" />
             <span className="font-bold">¡Venta realizada con éxito!</span>
-          </div>
+          </Alert>
         </div>
       )}
     </div>
