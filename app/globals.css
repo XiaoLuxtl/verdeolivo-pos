@@ -1,9 +1,9 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: olive --default, olive --prefersdark;
+  themes: oliveherb --default, oliveherb --prefersdark;
 }
 
-@custom-variant dark (&:where([data-theme=olive], [data-theme=olive] *));
+@custom-variant dark (&:where([data-theme=oliveherb], [data-theme=oliveherb] *));
 
 @plugin "daisyui/theme" {
   name: "olive";
@@ -41,3 +41,38 @@
 }
 
 
+
+@plugin "daisyui/theme" {
+  name: "oliveherb";
+  default: false;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: #F4F9F2;
+  --color-base-200: oklch(0.934 0.030 147.0);
+  --color-base-300: oklch(0.898 0.053 133.0);
+  --color-base-content: oklch(21% 0.006 56.043);
+  --color-primary: #266531;
+  --color-primary-content: oklch(98% 0.014 180.72);
+  --color-secondary: #7DBB48;
+  --color-secondary-content: oklch(98% 0.019 200.873);
+  --color-accent: #E7A612;
+  --color-accent-content: oklch(98% 0.026 102.212);
+  --color-neutral: oklch(0.161 0.105 147.0);
+  --color-neutral-content: oklch(98% 0.001 106.423);
+  --color-info: #0A76BC;
+  --color-info-content: oklch(97% 0.014 254.604);
+  --color-success: oklch(72% 0.219 149.579);
+  --color-success-content: oklch(98% 0.018 155.826);
+  --color-warning: oklch(64% 0.222 41.116);
+  --color-warning-content: oklch(98% 0.016 73.684);
+  --color-error: #ED0017;
+  --color-error-content: oklch(97% 0.013 17.38);
+  --radius-selector: 0.25rem;
+  --radius-field: 2rem;
+  --radius-box: 0rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 1;
+}

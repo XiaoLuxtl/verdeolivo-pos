@@ -37,7 +37,7 @@ export default function Sidebar() {
     >
       {/* Header */}
       <div className="p-4 flex items-center justify-between border-b border-primary-content/20">
-        {!isMinimized && <h1 className="text-xl font-bold">Herbalife POS</h1>}
+        {!isMinimized && <h1 className="text-xl font-bold">VerdeOlivo POS</h1>}
         <button
           onClick={() => setIsMinimized(!isMinimized)}
           className="btn btn-ghost btn-sm btn-circle"

@@ -138,6 +138,22 @@ export default function CompraForm({ onClose, onSave }: Props) {
     return producto ? `${producto.nombre} (${producto.unidad})` : "";
   };
 
+  const getProductoPeso = (productoId: string) => {
+    const producto = productos.find((p) => p.id === parseInt(productoId));
+    return producto?.peso || 0;
+  };
+
+  const getProductoUnidad = (productoId: string) => {
+    const producto = productos.find((p) => p.id === parseInt(productoId));
+    return producto?.unidad || "";
+  };
+
+  const calcularCantidadTotal = (detalle: DetalleCompra) => {
+    const cantidad = parseFloat(detalle.cantidad) || 0;
+    const peso = getProductoPeso(detalle.productoId);
+    return cantidad * peso;
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-base-100 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -238,7 +254,8 @@ export default function CompraForm({ onClose, onSave }: Props) {
                         <option value="">Seleccionar...</option>
                         {productos.map((p) => (
                           <option key={p.id} value={p.id}>
-                            {p.nombre} - {p.sku}
+                            {p.nombre} - {p.sku} ({p.peso}
+                            {p.unidad}/unidad)
                           </option>
                         ))}
                       </select>
@@ -246,7 +263,9 @@ export default function CompraForm({ onClose, onSave }: Props) {
 
                     {/* Cantidad */}
                     <div className="form-control">
-                      <label className="label label-text">Cantidad</label>
+                      <label className="label label-text">
+                        Cantidad (unidades)
+                      </label>
                       <input
                         type="number"
                         step="0.01"
@@ -257,6 +276,14 @@ export default function CompraForm({ onClose, onSave }: Props) {
                           actualizarDetalle(index, "cantidad", e.target.value)
                         }
                       />
+                      {detalle.productoId && detalle.cantidad && (
+                        <label className="label">
+                          <span className="label-text-alt text-info">
+                            = {calcularCantidadTotal(detalle)}
+                            {getProductoUnidad(detalle.productoId)} total
+                          </span>
+                        </label>
+                      )}
                     </div>
 
                     {/* Costo Unitario */}

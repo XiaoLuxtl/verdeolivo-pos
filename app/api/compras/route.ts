@@ -46,17 +46,32 @@ export async function POST(request: Request) {
 
       // 2. Crear detalles de compra
       for (const detalle of body.detalles) {
+        // Obtener el producto para saber su peso/contenido
+        const producto = await tx.producto.findUnique({
+          where: { id: parseInt(detalle.productoId) },
+        });
+
+        if (!producto) {
+          throw new Error(`Producto no encontrado: ${detalle.productoId}`);
+        }
+
+        // Calcular cantidad TOTAL en unidades base (gr, ml, etc)
+        // Si compro 2 botes de 1000gr = 2000gr total
+        const cantidadUnidades = parseFloat(detalle.cantidad); // Cantidad de botes/piezas
+        const pesoUnitario = producto.peso || 1; // Peso de cada bote
+        const cantidadTotal = cantidadUnidades * pesoUnitario; // 2 * 1000 = 2000gr
+
         await tx.detalleCompra.create({
           data: {
             compraId: nuevaCompra.id,
             productoId: parseInt(detalle.productoId),
-            cantidad: parseFloat(detalle.cantidad),
+            cantidad: cantidadUnidades,
             costoUnitario: parseFloat(detalle.costoUnitario),
             subtotal: parseFloat(detalle.subtotal),
           },
         });
 
-        // 3. Actualizar inventario (sumar cantidad)
+        // 3. Actualizar inventario (sumar peso TOTAL en gramos/ml)
         const inventario = await tx.inventario.findUnique({
           where: { productoId: parseInt(detalle.productoId) },
         });
@@ -66,7 +81,7 @@ export async function POST(request: Request) {
             where: { productoId: parseInt(detalle.productoId) },
             data: {
               cantidadActual: {
-                increment: parseFloat(detalle.cantidad),
+                increment: cantidadTotal, // Suma 2000gr, no 2 unidades
               },
             },
           });
@@ -78,11 +93,11 @@ export async function POST(request: Request) {
             productoId: parseInt(detalle.productoId),
             tipo: "entrada",
             categoria: "insumo",
-            cantidad: parseFloat(detalle.cantidad),
+            cantidad: cantidadTotal, // Registra 2000gr
             costoUnitario: parseFloat(detalle.costoUnitario),
             fecha: new Date(body.fecha || Date.now()),
             referencia: `Compra #${nuevaCompra.id}`,
-            notas: `Compra de ${body.proveedor}`,
+            notas: `Compra de ${cantidadUnidades} unidad(es) x ${pesoUnitario}${producto.unidad} = ${cantidadTotal}${producto.unidad}`,
           },
         });
       }
