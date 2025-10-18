@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Producto {
+  id              Int       @id @default(autoincrement())
+  sku             String    @unique
+  nombre          String
+  sabor           String?
+  proveedor       String?
+  precioUnitario  Float
+  peso            Float?
+  unidad          String    // gr, ml, pz
+  descripcion     String?
+  createdAt       DateTime  @default(now())
+
+  inventario      Inventario?
+  movimientos     MovimientoInventario[]
+  recetaIngredientes RecetaIngrediente[]
+  detallesCompra  DetalleCompra[]
+}
+
+model Inventario {
+  id              Int       @id @default(autoincrement())
+  productoId      Int       @unique
+  cantidadActual  Float     @default(0)
+  unidad          String
+  actualizadoEn   DateTime  @updatedAt
+
+  producto        Producto  @relation(fields: [productoId], references: [id], onDelete: Cascade)
+}
+
+model MovimientoInventario {
+  id              Int       @id @default(autoincrement())
+  productoId      Int
+  tipo            String    // entrada, salida
+  categoria       String    // insumo, venta, merma, ajuste
+  cantidad        Float
+  costoUnitario   Float?
+  fecha           DateTime  @default(now())
+  referencia      String?
+  notas           String?
+
+  producto        Producto  @relation(fields: [productoId], references: [id], onDelete: Cascade)
+}
+
+model Compra {
+  id              Int       @id @default(autoincrement())
+  fecha           DateTime  @default(now())
+  proveedor       String
+  total           Float
+  notas           String?
+  
+  detalles        DetalleCompra[]
+}
+
+model DetalleCompra {
+  id              Int       @id @default(autoincrement())
+  compraId        Int
+  productoId      Int
+  cantidad        Float
+  costoUnitario   Float
+  subtotal        Float
+
+  compra          Compra    @relation(fields: [compraId], references: [id], onDelete: Cascade)
+  producto        Producto  @relation("ProductoDetalleCompra", fields: [productoId], references: [id], onDelete: Restrict)
+}
+
+model Receta {
+  id              Int       @id @default(autoincrement())
+  nombre          String
+  descripcion     String?
+  precioVenta     Float
+  imagen          String?   // Base64
+  createdAt       DateTime  @default(now())
+
+  ingredientes    RecetaIngrediente[]
+  detallesVenta   DetalleVenta[]
+}
+
+model RecetaIngrediente {
+  id              Int       @id @default(autoincrement())
+  recetaId        Int
+  productoId      Int
+  cantidad        Float
+  unidad          String
+
+  receta          Receta    @relation(fields: [recetaId], references: [id], onDelete: Cascade)
+  producto        Producto  @relation(fields: [productoId], references: [id], onDelete: Cascade)
+}
+
+model Venta {
+  id              Int       @id @default(autoincrement())
+  fecha           DateTime  @default(now())
+  total           Float
+  recibido        Float
+  cambio          Float
+  metodoPago      String    @default("efectivo")
+  notas           String?
+
+  detalles        DetalleVenta[]
+}
+
+model DetalleVenta {
+  id              Int       @id @default(autoincrement())
+  ventaId         Int
+  recetaId        Int
+  cantidad        Int
+  precioUnitario  Float
+  subtotal        Float
+
+  venta           Venta     @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  receta          Receta    @relation(fields: [recetaId], references: [id], onDelete: Cascade)
+}
