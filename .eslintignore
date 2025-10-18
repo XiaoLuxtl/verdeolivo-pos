@@ -1,0 +1,6 @@
+# Archivos generados por Prisma
+app/generated/prisma/**
+
+# Otros archivos generados
+.next/**
+node_modules/**
