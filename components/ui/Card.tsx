@@ -7,11 +7,15 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = "default", ...props }, ref) => {
-    const classes = ["card"];
+    // Mapeo de variantes a clases de DaisyUI
+    const variantClasses = {
+      default: "card",
+      bordered: "card card-bordered",
+      compact: "card card-compact",
+      side: "card card-side",
+    };
 
-    if (variant && variant !== "default") {
-      classes.push(`card-${variant}`);
-    }
+    const classes = [variantClasses[variant]];
 
     return <div className={cn(...classes, className)} ref={ref} {...props} />;
   }

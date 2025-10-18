@@ -7,11 +7,15 @@ export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
   ({ className, variant = "info", ...props }, ref) => {
-    const classes = ["alert"];
+    // Mapeo de variantes a clases de DaisyUI
+    const variantClasses = {
+      info: "alert alert-info",
+      success: "alert alert-success",
+      warning: "alert alert-warning",
+      error: "alert alert-error",
+    };
 
-    if (variant) {
-      classes.push(`alert-${variant}`);
-    }
+    const classes = [variantClasses[variant]];
 
     return <div className={cn(...classes, className)} ref={ref} {...props} />;
   }

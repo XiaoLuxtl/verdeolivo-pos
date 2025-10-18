@@ -9,14 +9,23 @@ export interface SelectProps
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, variant = "bordered", size = "md", ...props }, ref) => {
-    const classes = ["select"];
+    // Mapeo de variantes a clases de DaisyUI
+    const variantClasses = {
+      default: "select",
+      bordered: "select select-bordered",
+      ghost: "select select-ghost",
+    };
 
-    if (variant && variant !== "default") {
-      classes.push(`select-${variant}`);
-    }
-    if (size && size !== "md") {
-      classes.push(`select-${size}`);
-    }
+    // Mapeo de tamaños
+    const sizeClasses = {
+      xs: "select-xs",
+      sm: "select-sm",
+      md: "",
+      lg: "select-lg",
+      xl: "select-xl",
+    };
+
+    const classes = [variantClasses[variant], sizeClasses[size]];
 
     return (
       <select className={cn(...classes, className)} ref={ref} {...props} />

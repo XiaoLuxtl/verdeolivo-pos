@@ -9,14 +9,23 @@ export interface TextareaProps
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, variant = "bordered", size = "md", ...props }, ref) => {
-    const classes = ["textarea"];
+    // Mapeo de variantes a clases de DaisyUI
+    const variantClasses = {
+      default: "textarea",
+      bordered: "textarea textarea-bordered",
+      ghost: "textarea textarea-ghost",
+    };
 
-    if (variant && variant !== "default") {
-      classes.push(`textarea-${variant}`);
-    }
-    if (size && size !== "md") {
-      classes.push(`textarea-${size}`);
-    }
+    // Mapeo de tamaños
+    const sizeClasses = {
+      xs: "textarea-xs",
+      sm: "textarea-sm",
+      md: "",
+      lg: "textarea-lg",
+      xl: "textarea-xl",
+    };
+
+    const classes = [variantClasses[variant], sizeClasses[size]];
 
     return (
       <textarea className={cn(...classes, className)} ref={ref} {...props} />

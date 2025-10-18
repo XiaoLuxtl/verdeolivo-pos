@@ -8,14 +8,25 @@ export interface LoadingProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Loading = React.forwardRef<HTMLDivElement, LoadingProps>(
   ({ className, size = "md", variant = "spinner", ...props }, ref) => {
-    const classes = ["loading"];
+    // Mapeo de variantes a clases de DaisyUI
+    const variantClasses = {
+      spinner: "loading",
+      dots: "loading loading-dots",
+      ring: "loading loading-ring",
+      ball: "loading loading-ball",
+      bars: "loading loading-bars",
+      infinity: "loading loading-infinity",
+    };
 
-    if (variant && variant !== "spinner") {
-      classes.push(`loading-${variant}`);
-    }
-    if (size && size !== "md") {
-      classes.push(`loading-${size}`);
-    }
+    // Mapeo de tamaños
+    const sizeClasses = {
+      xs: "loading-xs",
+      sm: "loading-sm",
+      md: "",
+      lg: "loading-lg",
+    };
+
+    const classes = [variantClasses[variant], sizeClasses[size]];
 
     return <div className={cn(...classes, className)} ref={ref} {...props} />;
   }

@@ -18,14 +18,29 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
   ({ className, variant = "default", size = "md", ...props }, ref) => {
-    const classes = ["badge"];
+    // Mapeo de variantes a clases de DaisyUI
+    const variantClasses = {
+      default: "badge",
+      primary: "badge badge-primary",
+      secondary: "badge badge-secondary",
+      accent: "badge badge-accent",
+      info: "badge badge-info",
+      success: "badge badge-success",
+      warning: "badge badge-warning",
+      error: "badge badge-error",
+      ghost: "badge badge-ghost",
+      outline: "badge badge-outline",
+    };
 
-    if (variant && variant !== "default") {
-      classes.push(`badge-${variant}`);
-    }
-    if (size && size !== "md") {
-      classes.push(`badge-${size}`);
-    }
+    // Mapeo de tamaños
+    const sizeClasses = {
+      xs: "badge-xs",
+      sm: "badge-sm",
+      md: "",
+      lg: "badge-lg",
+    };
+
+    const classes = [variantClasses[variant], sizeClasses[size]];
 
     return <div className={cn(...classes, className)} ref={ref} {...props} />;
   }

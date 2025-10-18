@@ -9,14 +9,23 @@ export interface InputProps
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, variant = "bordered", size = "md", ...props }, ref) => {
-    const classes = ["input"];
+    // Mapeo de variantes a clases de DaisyUI
+    const variantClasses = {
+      default: "input",
+      bordered: "input input-bordered",
+      ghost: "input input-ghost",
+    };
 
-    if (variant && variant !== "default") {
-      classes.push(`input-${variant}`);
-    }
-    if (size && size !== "md") {
-      classes.push(`input-${size}`);
-    }
+    // Mapeo de tamaños
+    const sizeClasses = {
+      xs: "input-xs",
+      sm: "input-sm",
+      md: "",
+      lg: "input-lg",
+      xl: "input-xl",
+    };
+
+    const classes = [variantClasses[variant], sizeClasses[size]];
 
     return <input className={cn(...classes, className)} ref={ref} {...props} />;
   }
