@@ -3,14 +3,16 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  Button,
-  Input,
   Select,
-  Modal,
-  ModalHeader,
-  ModalBody,
-} from "@/components/ui";
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Modal, ModalHeader, ModalContent } from "@/components/ui/dialog";
 
 type Producto = {
   id: number;
@@ -102,15 +104,17 @@ export default function MovimientoForm({
   return (
     <Modal>
       <ModalHeader>
-        <h2 className="text-2xl font-bold text-base-content">
-          Registrar Movimiento
-        </h2>
-        <Button type="button" onClick={onClose} variant="ghost" size="sm">
-          <X className="w-5 h-5" />
-        </Button>
+        <div className="flex justify-between items-center w-full">
+          <h2 className="text-2xl font-bold text-base-content">
+            Registrar Movimiento
+          </h2>
+          <Button type="button" onClick={onClose} variant="ghost" size="sm">
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
       </ModalHeader>
 
-      <ModalBody>
+      <ModalContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="alert alert-error">
@@ -124,20 +128,22 @@ export default function MovimientoForm({
               <span className="label-text">Producto *</span>
             </label>
             <Select
-              required
               value={formData.productoId}
-              onChange={(e) =>
-                setFormData({ ...formData, productoId: e.target.value })
+              onValueChange={(value) =>
+                setFormData({ ...formData, productoId: value })
               }
-              disabled={!!productoSeleccionado}
             >
-              <option value="">Seleccionar...</option>
-              {productos.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre} - Stock: {p.inventario?.cantidadActual || 0}{" "}
-                  {p.unidad}
-                </option>
-              ))}
+              <SelectTrigger disabled={!!productoSeleccionado}>
+                <SelectValue placeholder="Seleccionar..." />
+              </SelectTrigger>
+              <SelectContent>
+                {productos.map((p) => (
+                  <SelectItem key={p.id} value={p.id.toString()}>
+                    {p.nombre} - Stock: {p.inventario?.cantidadActual || 0}{" "}
+                    {p.unidad}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
 
@@ -148,14 +154,18 @@ export default function MovimientoForm({
                 <span className="label-text">Tipo *</span>
               </label>
               <Select
-                required
                 value={formData.tipo}
-                onChange={(e) =>
-                  setFormData({ ...formData, tipo: e.target.value })
+                onValueChange={(value) =>
+                  setFormData({ ...formData, tipo: value })
                 }
               >
-                <option value="salida">Salida</option>
-                <option value="entrada">Entrada</option>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="salida">Salida</SelectItem>
+                  <SelectItem value="entrada">Entrada</SelectItem>
+                </SelectContent>
               </Select>
             </div>
 
@@ -164,14 +174,18 @@ export default function MovimientoForm({
                 <span className="label-text">Categoría *</span>
               </label>
               <Select
-                required
                 value={formData.categoria}
-                onChange={(e) =>
-                  setFormData({ ...formData, categoria: e.target.value })
+                onValueChange={(value) =>
+                  setFormData({ ...formData, categoria: value })
                 }
               >
-                <option value="merma">Merma</option>
-                <option value="ajuste">Ajuste</option>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="merma">Merma</SelectItem>
+                  <SelectItem value="ajuste">Ajuste</SelectItem>
+                </SelectContent>
               </Select>
             </div>
           </div>
@@ -240,7 +254,7 @@ export default function MovimientoForm({
             >
               Cancelar
             </Button>
-            <Button type="submit" variant="primary" disabled={loading}>
+            <Button type="submit" variant="default" disabled={loading}>
               {loading ? (
                 <span className="loading loading-spinner"></span>
               ) : (
@@ -249,7 +263,7 @@ export default function MovimientoForm({
             </Button>
           </div>
         </form>
-      </ModalBody>
+      </ModalContent>
     </Modal>
   );
 }

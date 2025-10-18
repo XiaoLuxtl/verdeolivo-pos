@@ -2,10 +2,17 @@
 
 import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
-import { Button } from "./ui/Button";
-import { Input } from "./ui/Input";
-import { Alert } from "./ui/Alert";
-import { Modal, ModalBody, ModalActions } from "./ui/Modal";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Alert } from "@/components/ui/alert";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalTitle,
+  ModalClose,
+} from "./ui/dialog";
 
 type Props = {
   title: string;
@@ -43,57 +50,70 @@ export default function DeleteConfirmation({
   };
 
   return (
-    <Modal open={true} onClose={onCancel}>
-      <ModalBody>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="bg-error/10 p-3 rounded-full">
-            <AlertTriangle className="w-6 h-6 text-error" />
+    <Modal open={true} onOpenChange={(open) => !open && onCancel()}>
+      <ModalContent className="max-w-md">
+        <ModalHeader>
+          <ModalTitle>{title}</ModalTitle>
+          <ModalClose />
+        </ModalHeader>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-destructive/10 p-3 rounded-full">
+              <AlertTriangle className="w-6 h-6 text-destructive" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">{title}</h3>
+            </div>
           </div>
-          <h3 className="text-xl font-bold text-base-content">{title}</h3>
-        </div>
 
-        <p className="text-base-content/70 mb-4">{message}</p>
+          <p className="text-muted-foreground">{message}</p>
 
-        {error && (
-          <div className="alert alert-error mb-4">
-            <span>{error}</span>
-          </div>
-        )}
+          {error && (
+            <Alert variant="error">
+              <span>{error}</span>
+            </Alert>
+          )}
 
-        <div className="form-control mb-6">
-          <label className="label">
-            <span className="label-text">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
               Escribe <strong>{confirmText}</strong> para confirmar
-            </span>
-          </label>
-          <Input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder={confirmText}
-            disabled={loading}
-          />
+            </label>
+            <Input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={confirmText}
+              disabled={loading}
+            />
+          </div>
         </div>
-      </ModalBody>
 
-      <ModalActions>
-        <div className="flex gap-3 justify-end">
-          <Button onClick={onCancel} variant="ghost" disabled={loading}>
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleConfirm}
-            variant="error"
-            disabled={inputValue !== confirmText || loading}
-          >
-            {loading ? (
-              <span className="loading loading-spinner"></span>
-            ) : (
-              "Eliminar"
-            )}
-          </Button>
-        </div>
-      </ModalActions>
+        <ModalFooter>
+          <div className="flex gap-3 w-full">
+            <Button
+              onClick={onCancel}
+              variant="ghost"
+              className="flex-1"
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              variant="destructive"
+              className="flex-1"
+              disabled={inputValue !== confirmText || loading}
+            >
+              {loading ? (
+                <span className="loading loading-spinner"></span>
+              ) : (
+                "Eliminar"
+              )}
+            </Button>
+          </div>
+        </ModalFooter>
+      </ModalContent>
     </Modal>
   );
 }

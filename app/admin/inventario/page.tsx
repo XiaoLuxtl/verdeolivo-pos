@@ -11,16 +11,18 @@ import {
   Edit3,
 } from "lucide-react";
 import MovimientoForm from "@/components/MovimientoForm";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Button,
-  Badge,
   Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-} from "@/components/ui";
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Loading } from "@/components/ui/loading";
 
 type Producto = {
   id: number;
@@ -97,7 +99,7 @@ export default function InventarioPage() {
   };
 
   const getBadgeVariant = (cantidad: number) => {
-    if (cantidad === 0) return "error";
+    if (cantidad === 0) return "destructive";
     if (cantidad < 100) return "warning";
     return "success";
   };
@@ -114,29 +116,29 @@ export default function InventarioPage() {
 
   const getCategoriaIcon = (tipo: string, categoria: string) => {
     if (tipo === "entrada")
-      return <TrendingUp className="w-4 h-4 text-success" />;
-    return <TrendingDown className="w-4 h-4 text-error" />;
+      return <TrendingUp className="w-4 h-4 text-green-600" />;
+    return <TrendingDown className="w-4 h-4 text-red-600" />;
   };
 
-  const getCategoriaColor = (categoria: string) => {
+  const getCategoriaBadgeVariant = (categoria: string) => {
     switch (categoria) {
       case "insumo":
-        return "badge-success";
+        return "success";
       case "venta":
-        return "badge-primary";
+        return "default";
       case "merma":
-        return "badge-error";
+        return "destructive";
       case "ajuste":
-        return "badge-warning";
+        return "warning";
       default:
-        return "badge-ghost";
+        return "secondary";
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
+        <Loading size="lg" />
       </div>
     );
   }
@@ -146,13 +148,13 @@ export default function InventarioPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-base-content">Inventario</h1>
+        <h1 className="text-3xl font-bold text-foreground">Inventario</h1>
         <Button
           onClick={() => {
             setSelectedProducto(undefined);
             setShowForm(true);
           }}
-          variant="primary"
+          variant="default"
         >
           <Plus className="w-5 h-5 mr-2" />
           Registrar Movimiento
@@ -161,30 +163,30 @@ export default function InventarioPage() {
 
       {/* Estadísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <h3 className="text-sm text-base-content/60">Total Productos</h3>
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <h3 className="text-sm text-muted-foreground">Total Productos</h3>
             <p className="text-3xl font-bold text-primary">
               {productos.length}
             </p>
-          </div>
-        </div>
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <h3 className="text-sm text-base-content/60">Sin Stock</h3>
-            <p className="text-3xl font-bold text-error">
+          </CardContent>
+        </Card>
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <h3 className="text-sm text-muted-foreground">Sin Stock</h3>
+            <p className="text-3xl font-bold text-red-600">
               {
                 productos.filter(
                   (p) => (p.inventario?.cantidadActual || 0) === 0
                 ).length
               }
             </p>
-          </div>
-        </div>
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <h3 className="text-sm text-base-content/60">Stock Bajo</h3>
-            <p className="text-3xl font-bold text-warning">
+          </CardContent>
+        </Card>
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <h3 className="text-sm text-muted-foreground">Stock Bajo</h3>
+            <p className="text-3xl font-bold text-yellow-600">
               {
                 productos.filter((p) => {
                   const stock = p.inventario?.cantidadActual || 0;
@@ -192,99 +194,99 @@ export default function InventarioPage() {
                 }).length
               }
             </p>
-          </div>
-        </div>
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <h3 className="text-sm text-base-content/60">Con Stock</h3>
-            <p className="text-3xl font-bold text-success">
+          </CardContent>
+        </Card>
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <h3 className="text-sm text-muted-foreground">Con Stock</h3>
+            <p className="text-3xl font-bold text-green-600">
               {
                 productos.filter(
                   (p) => (p.inventario?.cantidadActual || 0) >= 100
                 ).length
               }
             </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filtros */}
-      <div className="card bg-base-100 shadow-lg mb-6">
-        <div className="card-body">
+      <Card className="shadow-lg mb-6">
+        <CardContent className="p-6">
           <div className="flex gap-2">
             <Button
               onClick={() => setFilter("todos")}
-              variant={filter === "todos" ? "primary" : "ghost"}
+              variant={filter === "todos" ? "default" : "ghost"}
               size="sm"
             >
               Todos
             </Button>
             <Button
               onClick={() => setFilter("sin-stock")}
-              variant={filter === "sin-stock" ? "error" : "ghost"}
+              variant={filter === "sin-stock" ? "destructive" : "ghost"}
               size="sm"
             >
               Sin Stock
             </Button>
             <Button
               onClick={() => setFilter("bajo")}
-              variant={filter === "bajo" ? "warning" : "ghost"}
+              variant={filter === "bajo" ? "secondary" : "ghost"}
               size="sm"
             >
               Stock Bajo
             </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Tabla de inventario */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body p-0">
-            <div className="p-4 border-b border-base-300">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Package className="w-5 h-5" />
-                Stock Actual
-              </h2>
-            </div>
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Stock Actual
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
             <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-              <Table zebra hover>
-                <Thead>
-                  <Tr>
-                    <Th>Producto</Th>
-                    <Th>Stock</Th>
-                    <Th></Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Producto</TableHead>
+                    <TableHead>Stock</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {productosFiltrados.length === 0 ? (
-                    <Tr>
-                      <Td
+                    <TableRow>
+                      <TableCell
                         colSpan={3}
-                        className="text-center py-8 text-base-content/50"
+                        className="text-center py-8 text-muted-foreground"
                       >
                         No hay productos
-                      </Td>
-                    </Tr>
+                      </TableCell>
+                    </TableRow>
                   ) : (
                     productosFiltrados.map((producto) => {
                       const stock = producto.inventario?.cantidadActual || 0;
                       return (
-                        <Tr key={producto.id}>
-                          <Td>
+                        <TableRow key={producto.id}>
+                          <TableCell>
                             <div>
                               <p className="font-semibold">{producto.nombre}</p>
-                              <p className="text-xs text-base-content/60">
+                              <p className="text-xs text-muted-foreground">
                                 {producto.sku}
                               </p>
                             </div>
-                          </Td>
-                          <Td>
+                          </TableCell>
+                          <TableCell>
                             <Badge variant={getBadgeVariant(stock)}>
                               {stock} {producto.unidad}
                             </Badge>
-                          </Td>
-                          <Td>
+                          </TableCell>
+                          <TableCell>
                             <Button
                               onClick={() => {
                                 setSelectedProducto({
@@ -299,33 +301,33 @@ export default function InventarioPage() {
                             >
                               <Edit3 className="w-4 h-4" />
                             </Button>
-                          </Td>
-                        </Tr>
+                          </TableCell>
+                        </TableRow>
                       );
                     })
                   )}
-                </Tbody>
+                </TableBody>
               </Table>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Historial de movimientos */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body p-0">
-            <div className="p-4 border-b border-base-300">
-              <h2 className="text-xl font-bold">Últimos Movimientos</h2>
-            </div>
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle>Últimos Movimientos</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
             <div className="overflow-y-auto max-h-[600px]">
               <div className="p-4 space-y-2">
                 {movimientos.length === 0 ? (
-                  <div className="text-center py-8 text-base-content/50">
+                  <div className="text-center py-8 text-muted-foreground">
                     No hay movimientos registrados
                   </div>
                 ) : (
                   movimientos.map((mov) => (
-                    <div key={mov.id} className="card bg-base-200">
-                      <div className="card-body p-3">
+                    <Card key={mov.id} className="bg-muted/50">
+                      <CardContent className="p-3">
                         <div className="flex items-start justify-between">
                           <div className="flex items-start gap-2 flex-1">
                             {getCategoriaIcon(mov.tipo, mov.categoria)}
@@ -333,38 +335,37 @@ export default function InventarioPage() {
                               <p className="font-semibold text-sm truncate">
                                 {mov.producto.nombre}
                               </p>
-                              <p className="text-xs text-base-content/60">
+                              <p className="text-xs text-muted-foreground">
                                 {mov.tipo === "entrada" ? "+" : "-"}
                                 {mov.cantidad} {mov.producto.unidad}
                               </p>
                               {mov.notas && (
-                                <p className="text-xs text-base-content/50 mt-1 line-clamp-2">
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                   {mov.notas}
                                 </p>
                               )}
                             </div>
                           </div>
                           <div className="text-right">
-                            <span
-                              className={`badge badge-sm ${getCategoriaColor(
-                                mov.categoria
-                              )}`}
+                            <Badge
+                              variant={getCategoriaBadgeVariant(mov.categoria)}
+                              className="text-xs"
                             >
                               {mov.categoria}
-                            </span>
-                            <p className="text-xs text-base-content/50 mt-1">
+                            </Badge>
+                            <p className="text-xs text-muted-foreground mt-1">
                               {formatFecha(mov.fecha)}
                             </p>
                           </div>
                         </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   ))
                 )}
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Formulario de movimiento */}

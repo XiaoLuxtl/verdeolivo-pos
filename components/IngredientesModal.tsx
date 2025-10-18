@@ -2,15 +2,24 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import {
-  Button,
-  Input,
   Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import {
   Modal,
+  ModalContent,
   ModalHeader,
-  ModalBody,
-  ModalActions,
-} from "@/components/ui";
+  ModalFooter,
+  ModalTitle,
+  ModalClose,
+} from "./ui/dialog";
+import { Loading } from "./ui/loading";
 
 type Producto = {
   id: number;
@@ -110,158 +119,166 @@ export default function IngredientesModal({
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-base-100 p-8 rounded-lg">
-          <span className="loading loading-spinner loading-lg"></span>
-        </div>
-      </div>
+      <Modal open={true} onOpenChange={() => {}}>
+        <ModalContent>
+          <div className="flex items-center justify-center p-8">
+            <Loading size="lg" />
+          </div>
+        </ModalContent>
+      </Modal>
     );
   }
 
   return (
-    <Modal>
-      <ModalHeader>
-        <div>
-          <h2 className="text-2xl font-bold text-base-content">Ingredientes</h2>
-          <p className="text-sm text-base-content/60 mt-1">{recetaNombre}</p>
-        </div>
-        <Button type="button" onClick={onClose} variant="ghost" size="sm">
-          <X className="w-5 h-5" />
-        </Button>
-      </ModalHeader>
+    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent className="max-w-4xl">
+        <ModalHeader>
+          <ModalTitle className="text-2xl font-bold">Ingredientes</ModalTitle>
+          <p className="text-sm text-muted-foreground mt-1">{recetaNombre}</p>
+          <ModalClose />
+        </ModalHeader>
 
-      <ModalBody>
-        {/* Botón agregar */}
-        {!showForm && (
-          <Button
-            type="button"
-            onClick={() => setShowForm(true)}
-            variant="primary"
-            size="sm"
-            className="mb-4"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Agregar Ingrediente
-          </Button>
-        )}
+        <div className="space-y-4">
+          {/* Botón agregar */}
+          {!showForm && (
+            <Button
+              type="button"
+              onClick={() => setShowForm(true)}
+              variant="default"
+              size="sm"
+              className="mb-4"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Agregar Ingrediente
+            </Button>
+          )}
 
-        {/* Formulario */}
-        {showForm && (
-          <form
-            onSubmit={handleAddIngrediente}
-            className="card bg-base-200 p-4 mb-4"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="form-control">
-                <label className="label label-text">Producto</label>
-                <Select
-                  required
-                  size="sm"
-                  value={formData.productoId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, productoId: e.target.value })
-                  }
-                >
-                  <option value="">Seleccionar...</option>
-                  {productos.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nombre}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-
-              <div className="form-control">
-                <label className="label label-text">Cantidad</label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  required
-                  size="sm"
-                  value={formData.cantidad}
-                  onChange={(e) =>
-                    setFormData({ ...formData, cantidad: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label label-text">Unidad</label>
-                <Select
-                  size="sm"
-                  value={formData.unidad}
-                  onChange={(e) =>
-                    setFormData({ ...formData, unidad: e.target.value })
-                  }
-                >
-                  <option value="gr">gr</option>
-                  <option value="ml">ml</option>
-                  <option value="pz">pz</option>
-                  <option value="kg">kg</option>
-                  <option value="lt">lt</option>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex gap-2 mt-3">
-              <Button type="submit" variant="primary" size="sm">
-                Agregar
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setShowForm(false)}
-                variant="ghost"
-                size="sm"
-              >
-                Cancelar
-              </Button>
-            </div>
-          </form>
-        )}
-
-        {/* Lista de ingredientes */}
-        <div className="space-y-2">
-          {ingredientes.length === 0 ? (
-            <div className="text-center py-8 text-base-content/50">
-              No hay ingredientes agregados
-            </div>
-          ) : (
-            ingredientes.map((ing) => (
-              <div
-                key={ing.id}
-                className="flex items-center justify-between p-4 bg-base-200 rounded-lg"
-              >
-                <div>
-                  <p className="font-semibold">{ing.producto.nombre}</p>
-                  <p className="text-sm text-base-content/60">
-                    {ing.cantidad} {ing.unidad}
-                  </p>
+          {/* Formulario */}
+          {showForm && (
+            <form
+              onSubmit={handleAddIngrediente}
+              className="bg-muted p-4 mb-4 rounded-lg border"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Producto
+                  </label>
+                  <Select
+                    value={formData.productoId}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, productoId: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {productos.map((p) => (
+                        <SelectItem key={p.id} value={p.id.toString()}>
+                          {p.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Cantidad
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={formData.cantidad}
+                    onChange={(e) =>
+                      setFormData({ ...formData, cantidad: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Unidad
+                  </label>
+                  <Select
+                    value={formData.unidad}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, unidad: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gr">gr</SelectItem>
+                      <SelectItem value="ml">ml</SelectItem>
+                      <SelectItem value="pz">pz</SelectItem>
+                      <SelectItem value="kg">kg</SelectItem>
+                      <SelectItem value="lt">lt</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-3">
+                <Button type="submit" variant="default" size="sm">
+                  Agregar
+                </Button>
                 <Button
                   type="button"
-                  onClick={() => handleDeleteIngrediente(ing.id)}
+                  onClick={() => setShowForm(false)}
                   variant="ghost"
                   size="sm"
-                  className="text-error"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  Cancelar
                 </Button>
               </div>
-            ))
+            </form>
           )}
-        </div>
-      </ModalBody>
 
-      <ModalActions>
-        <Button
-          type="button"
-          onClick={onClose}
-          variant="primary"
-          className="w-full"
-        >
-          Cerrar
-        </Button>
-      </ModalActions>
+          {/* Lista de ingredientes */}
+          <div className="space-y-2">
+            {ingredientes.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No hay ingredientes agregados
+              </div>
+            ) : (
+              ingredientes.map((ing) => (
+                <div
+                  key={ing.id}
+                  className="flex items-center justify-between p-4 bg-muted rounded-lg border"
+                >
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {ing.producto.nombre}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {ing.cantidad} {ing.unidad}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => handleDeleteIngrediente(ing.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <ModalFooter>
+          <Button onClick={onClose} variant="default" className="w-full">
+            Cerrar
+          </Button>
+        </ModalFooter>
+      </ModalContent>
     </Modal>
   );
 }

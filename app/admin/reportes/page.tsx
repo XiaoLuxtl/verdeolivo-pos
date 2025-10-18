@@ -11,18 +11,25 @@ import {
   AlertTriangle,
   BarChart3,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
-  Button,
-  Badge,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Card,
-  CardBody,
-} from "@/components/ui";
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loading } from "@/components/ui/loading";
 
 type ReporteVentas = {
   periodo: string;
@@ -122,7 +129,7 @@ export default function ReportesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
+        <Loading size="lg" />
       </div>
     );
   }
@@ -130,7 +137,7 @@ export default function ReportesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-base-content">Reportes</h1>
+        <h1 className="text-3xl font-bold text-foreground">Reportes</h1>
         <Button variant="outline">
           <Download className="w-5 h-5 mr-2" />
           Exportar PDF
@@ -149,7 +156,7 @@ export default function ReportesPage() {
               <Button
                 key={p}
                 onClick={() => setPeriodoVentas(p)}
-                variant={periodoVentas === p ? "primary" : "ghost"}
+                variant={periodoVentas === p ? "default" : "ghost"}
                 size="sm"
               >
                 {getPeriodoLabel(p)}
@@ -160,94 +167,100 @@ export default function ReportesPage() {
 
         {/* Estadísticas principales */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="bg-gradient-to-br from-primary to-primary-focus text-primary-content shadow-lg">
-            <CardBody>
+          <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm opacity-90">Total Ventas</h3>
+                  <h3 className="text-sm text-primary-foreground/80">
+                    Total Ventas
+                  </h3>
                   <p className="text-4xl font-bold">
                     {reporteVentas?.resumen.totalVentas || 0}
                   </p>
                 </div>
-                <ShoppingCart className="w-12 h-12 opacity-50" />
+                <ShoppingCart className="w-12 h-12 text-primary-foreground/50" />
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-success to-success-focus text-success-content shadow-lg">
-            <CardBody>
+          <Card className="bg-gradient-to-br from-green-500 to-green-500/80 text-white shadow-lg">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm opacity-90">Ingresos Totales</h3>
+                  <h3 className="text-sm text-white/80">Ingresos Totales</h3>
                   <p className="text-4xl font-bold">
                     ${reporteVentas?.resumen.totalIngresos.toFixed(2) || "0.00"}
                   </p>
                 </div>
-                <DollarSign className="w-12 h-12 opacity-50" />
+                <DollarSign className="w-12 h-12 text-white/50" />
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-secondary to-secondary-focus text-secondary-content shadow-lg">
-            <CardBody>
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-500/80 text-white shadow-lg">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm opacity-90">Promedio por Venta</h3>
+                  <h3 className="text-sm text-white/80">Promedio por Venta</h3>
                   <p className="text-4xl font-bold">
                     ${reporteVentas?.resumen.promedioVenta.toFixed(2) || "0.00"}
                   </p>
                 </div>
-                <TrendingUp className="w-12 h-12 opacity-50" />
+                <TrendingUp className="w-12 h-12 text-white/50" />
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         </div>
 
         {/* Top recetas */}
-        <Card className="bg-base-100 shadow-lg">
-          <CardBody>
-            <h3 className="card-title flex items-center gap-2">
+        <Card className="bg-card shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5" />
               Recetas Más Vendidas
-            </h3>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="overflow-x-auto">
-              <Table zebra hover>
-                <Thead>
-                  <Tr>
-                    <Th>#</Th>
-                    <Th>Receta</Th>
-                    <Th>Cantidad</Th>
-                    <Th>Ingresos</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>#</TableHead>
+                    <TableHead>Receta</TableHead>
+                    <TableHead>Cantidad</TableHead>
+                    <TableHead>Ingresos</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {reporteVentas?.topRecetas.length === 0 ? (
-                    <Tr>
-                      <Td
+                    <TableRow>
+                      <TableCell
                         colSpan={4}
-                        className="text-center py-8 text-base-content/50"
+                        className="text-center py-8 text-muted-foreground"
                       >
                         No hay datos de ventas en este periodo
-                      </Td>
-                    </Tr>
+                      </TableCell>
+                    </TableRow>
                   ) : (
                     reporteVentas?.topRecetas.map((receta, index) => (
-                      <Tr key={`receta-${receta.nombre}-${index}`}>
-                        <Td className="font-bold">{index + 1}</Td>
-                        <Td className="font-semibold">{receta.nombre}</Td>
-                        <Td>
-                          <Badge variant="primary">{receta.cantidad}</Badge>
-                        </Td>
-                        <Td className="font-bold text-success">
+                      <TableRow key={`receta-${receta.nombre}-${index}`}>
+                        <TableCell className="font-bold">{index + 1}</TableCell>
+                        <TableCell className="font-semibold">
+                          {receta.nombre}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="default">{receta.cantidad}</Badge>
+                        </TableCell>
+                        <TableCell className="font-bold text-green-600">
                           ${receta.ingresos.toFixed(2)}
-                        </Td>
-                      </Tr>
+                        </TableCell>
+                      </TableRow>
                     ))
                   )}
-                </Tbody>
+                </TableBody>
               </Table>
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
 
@@ -263,7 +276,7 @@ export default function ReportesPage() {
               <Button
                 key={p}
                 onClick={() => setPeriodoInventario(p)}
-                variant={periodoInventario === p ? "secondary" : "ghost"}
+                variant={periodoInventario === p ? "default" : "ghost"}
                 size="sm"
               >
                 {getPeriodoLabel(p)}
@@ -274,50 +287,52 @@ export default function ReportesPage() {
 
         {/* Estadísticas de inventario */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-base-100 shadow-lg">
-            <CardBody>
-              <h3 className="text-sm text-base-content/60">
+          <Card className="bg-card shadow-lg">
+            <CardContent className="p-6">
+              <h3 className="text-sm text-muted-foreground">
                 Productos Totales
               </h3>
               <p className="text-3xl font-bold text-primary">
                 {reporteInventario?.resumen.totalProductos || 0}
               </p>
-            </CardBody>
+            </CardContent>
           </Card>
 
-          <Card className="bg-base-100 shadow-lg">
-            <CardBody>
-              <h3 className="text-sm text-base-content/60">Sin Stock</h3>
-              <p className="text-3xl font-bold text-error">
+          <Card className="bg-card shadow-lg">
+            <CardContent className="p-6">
+              <h3 className="text-sm text-muted-foreground">Sin Stock</h3>
+              <p className="text-3xl font-bold text-red-600">
                 {reporteInventario?.resumen.sinStock || 0}
               </p>
-            </CardBody>
+            </CardContent>
           </Card>
 
-          <Card className="bg-base-100 shadow-lg">
-            <CardBody>
-              <h3 className="text-sm text-base-content/60">Stock Bajo</h3>
-              <p className="text-3xl font-bold text-warning">
+          <Card className="bg-card shadow-lg">
+            <CardContent className="p-6">
+              <h3 className="text-sm text-muted-foreground">Stock Bajo</h3>
+              <p className="text-3xl font-bold text-yellow-600">
                 {reporteInventario?.resumen.stockBajo || 0}
               </p>
-            </CardBody>
+            </CardContent>
           </Card>
 
-          <Card className="bg-base-100 shadow-lg">
-            <CardBody>
-              <h3 className="text-sm text-base-content/60">Movimientos</h3>
-              <p className="text-3xl font-bold text-info">
+          <Card className="bg-card shadow-lg">
+            <CardContent className="p-6">
+              <h3 className="text-sm text-muted-foreground">Movimientos</h3>
+              <p className="text-3xl font-bold text-blue-600">
                 {reporteInventario?.resumen.totalMovimientos || 0}
               </p>
-            </CardBody>
+            </CardContent>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Movimientos por categoría */}
-          <Card className="bg-base-100 shadow-lg">
-            <CardBody>
-              <h3 className="card-title">Movimientos por Categoría</h3>
+          <Card className="bg-card shadow-lg">
+            <CardHeader>
+              <CardTitle>Movimientos por Categoría</CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-3">
                 {reporteInventario?.movimientosPorCategoria.map((cat) => (
                   <div key={cat.categoria}>
@@ -325,109 +340,121 @@ export default function ReportesPage() {
                       <span className="font-semibold capitalize">
                         {cat.categoria}
                       </span>
-                      <span className="badge badge-primary">
-                        {cat.cantidad}
-                      </span>
+                      <Badge variant="default">{cat.cantidad}</Badge>
                     </div>
-                    <progress
-                      className="progress progress-primary"
-                      value={cat.cantidad}
-                      max={reporteInventario.resumen.totalMovimientos}
-                    ></progress>
-                    <p className="text-xs text-base-content/50 mt-1">
+                    <div className="w-full bg-secondary rounded-full h-2">
+                      <div
+                        className="bg-primary h-2 rounded-full"
+                        style={{
+                          width: `${
+                            (cat.cantidad /
+                              reporteInventario.resumen.totalMovimientos) *
+                            100
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
                       {cat.productos} producto(s) afectado(s)
                     </p>
                   </div>
                 ))}
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
 
           {/* Alertas */}
-          <Card className="bg-base-100 shadow-lg">
-            <CardBody>
-              <h3 className="card-title flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-warning" />
+          <Card className="bg-card shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-yellow-600" />
                 Alertas de Inventario
-              </h3>
-
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               {reporteInventario?.alertas.sinStock.length === 0 &&
               reporteInventario?.alertas.stockBajo.length === 0 ? (
-                <div className="text-center py-8 text-base-content/50">
-                  <p className="text-success font-semibold">✓ Todo en orden</p>
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-green-600 font-semibold">
+                    ✓ Todo en orden
+                  </p>
                   <p className="text-sm">No hay alertas de inventario</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {reporteInventario?.alertas.sinStock.map((prod) => (
-                    <div key={prod.id} className="alert alert-error">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span className="text-sm">
+                    <Alert key={prod.id}>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
                         <strong>{prod.nombre}</strong> sin stock
-                      </span>
-                    </div>
+                      </AlertDescription>
+                    </Alert>
                   ))}
                   {reporteInventario?.alertas.stockBajo.map((prod) => (
-                    <div key={prod.id} className="alert alert-warning">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span className="text-sm">
+                    <Alert key={prod.id}>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
                         <strong>{prod.nombre}</strong>: {prod.stock}{" "}
                         {prod.unidad}
-                      </span>
-                    </div>
+                      </AlertDescription>
+                    </Alert>
                   ))}
                 </div>
               )}
-            </CardBody>
+            </CardContent>
           </Card>
         </div>
 
         {/* Productos más movidos */}
-        <Card className="bg-base-100 shadow-lg mt-6">
-          <CardBody>
-            <h3 className="card-title">Productos con Más Movimientos</h3>
+        <Card className="bg-card shadow-lg mt-6">
+          <CardHeader>
+            <CardTitle>Productos con Más Movimientos</CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="overflow-x-auto">
-              <Table zebra hover>
-                <Thead>
-                  <Tr>
-                    <Th>Producto</Th>
-                    <Th>Movimientos</Th>
-                    <Th>Entradas</Th>
-                    <Th>Salidas</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Producto</TableHead>
+                    <TableHead>Movimientos</TableHead>
+                    <TableHead>Entradas</TableHead>
+                    <TableHead>Salidas</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {reporteInventario?.productosMasMovidos.length === 0 ? (
-                    <Tr>
-                      <Td
+                    <TableRow>
+                      <TableCell
                         colSpan={4}
-                        className="text-center py-8 text-base-content/50"
+                        className="text-center py-8 text-muted-foreground"
                       >
                         No hay movimientos en este periodo
-                      </Td>
-                    </Tr>
+                      </TableCell>
+                    </TableRow>
                   ) : (
                     reporteInventario?.productosMasMovidos.map(
                       (prod, index) => (
-                        <Tr key={`producto-${prod.nombre}-${index}`}>
-                          <Td className="font-semibold">{prod.nombre}</Td>
-                          <Td>
-                            <Badge variant="primary">{prod.movimientos}</Badge>
-                          </Td>
-                          <Td className="text-success">
+                        <TableRow key={`producto-${prod.nombre}-${index}`}>
+                          <TableCell className="font-semibold">
+                            {prod.nombre}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="default">{prod.movimientos}</Badge>
+                          </TableCell>
+                          <TableCell className="text-green-600">
                             +{prod.entradas.toFixed(2)}
-                          </Td>
-                          <Td className="text-error">
+                          </TableCell>
+                          <TableCell className="text-red-600">
                             -{prod.salidas.toFixed(2)}
-                          </Td>
-                        </Tr>
+                          </TableCell>
+                        </TableRow>
                       )
                     )
                   )}
-                </Tbody>
+                </TableBody>
               </Table>
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
     </div>

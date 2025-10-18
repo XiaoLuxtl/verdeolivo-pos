@@ -3,7 +3,16 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import ImageUpload from "./ImageUpload";
-import { Button, Input, Modal, ModalHeader, ModalBody } from "@/components/ui";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalTitle,
+  ModalClose,
+} from "./ui/dialog";
 
 type Receta = {
   id?: number;
@@ -66,95 +75,123 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
   };
 
   return (
-    <Modal>
-      <ModalHeader>
-        <h2 className="text-2xl font-bold text-base-content">
-          {receta?.id ? "Editar Receta" : "Nueva Receta"}
-        </h2>
-        <Button type="button" onClick={onClose} variant="ghost" size="sm">
-          <X className="w-5 h-5" />
-        </Button>
-      </ModalHeader>
+    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent className="max-w-2xl">
+        <ModalHeader>
+          <ModalTitle className="text-2xl font-bold">
+            {receta?.id ? "Editar Receta" : "Nueva Receta"}
+          </ModalTitle>
+          <ModalClose />
+        </ModalHeader>
 
-      <ModalBody>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="alert alert-error">
-              <span>{error}</span>
+        <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="alert alert-error">
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Imagen */}
+            <ImageUpload
+              value={formData.imagen}
+              onChange={(imagen) => setFormData({ ...formData, imagen })}
+            />
+
+            {/* Nombre */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Nombre de la Receta *</span>
+              </label>
+              <Input
+                type="text"
+                required
+                value={formData.nombre}
+                onChange={(e) =>
+                  setFormData({ ...formData, nombre: e.target.value })
+                }
+                placeholder="Ej. Malteada de Uva"
+              />
             </div>
-          )}
 
-          {/* Imagen */}
-          <ImageUpload
-            value={formData.imagen}
-            onChange={(imagen) => setFormData({ ...formData, imagen })}
-          />
+            {/* Precio de Venta */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Precio de Venta *</span>
+              </label>
+              <Input
+                type="number"
+                step="0.01"
+                required
+                value={formData.precioVenta}
+                onChange={(e) =>
+                  setFormData({ ...formData, precioVenta: e.target.value })
+                }
+                placeholder="0.00"
+              />
+            </div>
 
-          {/* Nombre */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Nombre de la Receta *</span>
-            </label>
-            <Input
-              type="text"
-              required
-              value={formData.nombre}
-              onChange={(e) =>
-                setFormData({ ...formData, nombre: e.target.value })
-              }
-              placeholder="Ej. Malteada de Uva"
-            />
-          </div>
+            {/* Descripción */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Descripción</span>
+              </label>
+              <textarea
+                className="textarea textarea-bordered h-24"
+                value={formData.descripcion}
+                onChange={(e) =>
+                  setFormData({ ...formData, descripcion: e.target.value })
+                }
+                placeholder="Descripción opcional de la receta..."
+              />
+            </div>
 
-          {/* Precio de Venta */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Precio de Venta *</span>
-            </label>
-            <Input
-              type="number"
-              step="0.01"
-              required
-              value={formData.precioVenta}
-              onChange={(e) =>
-                setFormData({ ...formData, precioVenta: e.target.value })
-              }
-              placeholder="0.00"
-            />
-          </div>
+            <div className="alert alert-info">
+              <span className="text-sm">
+                💡 Después de crear la receta podrás agregar los ingredientes
+                necesarios
+              </span>
+            </div>
 
-          {/* Descripción */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Descripción</span>
-            </label>
-            <textarea
-              className="textarea textarea-bordered h-24"
-              value={formData.descripcion}
-              onChange={(e) =>
-                setFormData({ ...formData, descripcion: e.target.value })
-              }
-              placeholder="Descripción opcional de la receta..."
-            />
-          </div>
+            <div className="flex gap-3 justify-end pt-4">
+              <Button
+                type="button"
+                onClick={onClose}
+                variant="ghost"
+                disabled={loading}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" variant="default" disabled={loading}>
+                {loading ? (
+                  <span className="loading loading-spinner"></span>
+                ) : receta?.id ? (
+                  "Actualizar"
+                ) : (
+                  "Crear Receta"
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
 
-          <div className="alert alert-info">
-            <span className="text-sm">
-              💡 Después de crear la receta podrás agregar los ingredientes
-              necesarios
-            </span>
-          </div>
-
-          <div className="flex gap-3 justify-end pt-4">
+        <ModalFooter>
+          <div className="flex gap-3 w-full">
             <Button
-              type="button"
               onClick={onClose}
               variant="ghost"
+              className="flex-1"
               disabled={loading}
             >
               Cancelar
             </Button>
-            <Button type="submit" variant="primary" disabled={loading}>
+            <Button
+              type="submit"
+              variant="default"
+              className="flex-1"
+              disabled={loading}
+              onClick={handleSubmit}
+            >
               {loading ? (
                 <span className="loading loading-spinner"></span>
               ) : receta?.id ? (
@@ -164,8 +201,8 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
               )}
             </Button>
           </div>
-        </form>
-      </ModalBody>
+        </ModalFooter>
+      </ModalContent>
     </Modal>
   );
 }

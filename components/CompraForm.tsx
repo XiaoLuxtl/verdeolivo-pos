@@ -1,13 +1,31 @@
-// Ruta: components/CompraForm.tsx
+// components/CompraForm.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
-import { Button } from "./ui/Button";
-import { Input } from "./ui/Input";
-import { Select } from "./ui/Select";
-import { Alert } from "./ui/Alert";
-import { Modal, ModalHeader, ModalBody, ModalActions } from "./ui/Modal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+  ModalClose,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Loading } from "@/components/ui/loading";
 
 type Producto = {
   id: number;
@@ -26,11 +44,12 @@ type DetalleCompra = {
 };
 
 type Props = {
+  open?: boolean;
   onClose: () => void;
   onSave: () => void;
 };
 
-export default function CompraForm({ onClose, onSave }: Props) {
+export default function CompraForm({ open = true, onClose, onSave }: Props) {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [formData, setFormData] = useState({
     fecha: new Date().toISOString().split("T")[0],
@@ -139,11 +158,6 @@ export default function CompraForm({ onClose, onSave }: Props) {
     }
   };
 
-  const getProductoNombre = (productoId: string) => {
-    const producto = productos.find((p) => p.id === parseInt(productoId));
-    return producto ? `${producto.nombre} (${producto.unidad})` : "";
-  };
-
   const getProductoPeso = (productoId: string) => {
     const producto = productos.find((p) => p.id === parseInt(productoId));
     return producto?.peso || 0;
@@ -160,30 +174,32 @@ export default function CompraForm({ onClose, onSave }: Props) {
     return cantidad * peso;
   };
 
-  return (
-    <Modal open={true} onClose={onClose}>
-      <ModalHeader>
-        <h2 className="text-2xl font-bold">Registrar Compra</h2>
-        <Button onClick={onClose} variant="ghost" size="sm" shape="circle">
-          <X className="w-5 h-5" />
-        </Button>
-      </ModalHeader>
+  if (!open) return null;
 
-      <ModalBody>
+  return (
+    <Modal open={open} onOpenChange={onClose}>
+      <ModalContent className="sm:max-w-4xl">
+        <ModalHeader>
+          <ModalTitle>Registrar Compra</ModalTitle>
+          <ModalDescription>
+            Completa la información de la compra y agrega los productos.
+          </ModalDescription>
+          <ModalClose />
+        </ModalHeader>
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <Alert variant="error">
-              <span>{error}</span>
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
           {/* Datos generales */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Fecha *</span>
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="fecha">Fecha *</Label>
               <Input
+                id="fecha"
                 type="date"
                 required
                 value={formData.fecha}
@@ -193,11 +209,10 @@ export default function CompraForm({ onClose, onSave }: Props) {
               />
             </div>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Proveedor *</span>
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="proveedor">Proveedor *</Label>
               <Input
+                id="proveedor"
                 type="text"
                 required
                 value={formData.proveedor}
@@ -210,28 +225,27 @@ export default function CompraForm({ onClose, onSave }: Props) {
           </div>
 
           {/* Notas */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Notas</span>
-            </label>
-            <textarea
-              className="textarea textarea-bordered h-20"
+          <div className="space-y-2">
+            <Label htmlFor="notas">Notas</Label>
+            <Textarea
+              id="notas"
               value={formData.notas}
               onChange={(e) =>
                 setFormData({ ...formData, notas: e.target.value })
               }
               placeholder="Notas adicionales..."
+              rows={3}
             />
           </div>
 
           {/* Detalles de compra */}
-          <div className="border-t border-base-300 pt-4">
+          <div className="border-t pt-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Productos</h3>
               <Button
                 type="button"
                 onClick={agregarDetalle}
-                variant="primary"
+                variant="outline"
                 size="sm"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -241,100 +255,101 @@ export default function CompraForm({ onClose, onSave }: Props) {
 
             <div className="space-y-3">
               {detalles.map((detalle, index) => (
-                <div key={index} className="card bg-base-200 p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                    {/* Producto */}
-                    <div className="form-control md:col-span-2">
-                      <label className="label label-text">Producto</label>
-                      <Select
-                        required
-                        size="sm"
-                        value={detalle.productoId}
-                        onChange={(e) =>
-                          actualizarDetalle(index, "productoId", e.target.value)
-                        }
-                      >
-                        <option value="">Seleccionar...</option>
-                        {productos.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.nombre} - {p.sku} ({p.peso}
-                            {p.unidad}/unidad)
-                          </option>
-                        ))}
-                      </Select>
-                    </div>
+                <Card key={index} className="p-4">
+                  <CardContent className="p-0">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                      {/* Producto */}
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor={`producto-${index}`}>Producto</Label>
+                        <Select
+                          value={detalle.productoId}
+                          onValueChange={(value) =>
+                            actualizarDetalle(index, "productoId", value)
+                          }
+                        >
+                          <SelectTrigger id={`producto-${index}`}>
+                            <SelectValue placeholder="Seleccionar producto" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {productos.map((p) => (
+                              <SelectItem key={p.id} value={p.id.toString()}>
+                                {p.nombre} - {p.sku} ({p.peso}
+                                {p.unidad}/unidad)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                    {/* Cantidad */}
-                    <div className="form-control">
-                      <label className="label label-text">
-                        Cantidad (unidades)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        required
-                        className="input input-bordered input-sm"
-                        value={detalle.cantidad}
-                        onChange={(e) =>
-                          actualizarDetalle(index, "cantidad", e.target.value)
-                        }
-                      />
-                      {detalle.productoId && detalle.cantidad && (
-                        <label className="label">
-                          <span className="label-text-alt text-info">
+                      {/* Cantidad */}
+                      <div className="space-y-2">
+                        <Label htmlFor={`cantidad-${index}`}>
+                          Cantidad (unidades)
+                        </Label>
+                        <Input
+                          id={`cantidad-${index}`}
+                          type="number"
+                          step="0.01"
+                          required
+                          value={detalle.cantidad}
+                          onChange={(e) =>
+                            actualizarDetalle(index, "cantidad", e.target.value)
+                          }
+                        />
+                        {detalle.productoId && detalle.cantidad && (
+                          <p className="text-xs text-muted-foreground">
                             = {calcularCantidadTotal(detalle)}
                             {getProductoUnidad(detalle.productoId)} total
-                          </span>
-                        </label>
-                      )}
-                    </div>
+                          </p>
+                        )}
+                      </div>
 
-                    {/* Costo Unitario */}
-                    <div className="form-control">
-                      <label className="label label-text">Costo Unit.</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        required
-                        className="input input-bordered input-sm"
-                        value={detalle.costoUnitario}
-                        onChange={(e) =>
-                          actualizarDetalle(
-                            index,
-                            "costoUnitario",
-                            e.target.value
-                          )
-                        }
-                      />
-                    </div>
-
-                    {/* Subtotal y eliminar */}
-                    <div className="flex items-end gap-2">
-                      <div className="form-control flex-1">
-                        <label className="label label-text">Subtotal</label>
-                        <input
-                          type="text"
-                          readOnly
-                          className="input input-bordered input-sm bg-base-300"
-                          value={`$${detalle.subtotal.toFixed(2)}`}
+                      {/* Costo Unitario */}
+                      <div className="space-y-2">
+                        <Label htmlFor={`costo-${index}`}>Costo Unit.</Label>
+                        <Input
+                          id={`costo-${index}`}
+                          type="number"
+                          step="0.01"
+                          required
+                          value={detalle.costoUnitario}
+                          onChange={(e) =>
+                            actualizarDetalle(
+                              index,
+                              "costoUnitario",
+                              e.target.value
+                            )
+                          }
                         />
                       </div>
-                      <Button
-                        type="button"
-                        onClick={() => eliminarDetalle(index)}
-                        variant="error"
-                        size="sm"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+
+                      {/* Subtotal y eliminar */}
+                      <div className="flex items-end gap-2">
+                        <div className="space-y-2 flex-1">
+                          <Label>Subtotal</Label>
+                          <Input
+                            readOnly
+                            value={`$${detalle.subtotal.toFixed(2)}`}
+                            className="bg-muted"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={() => eliminarDetalle(index)}
+                          variant="destructive"
+                          size="icon"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))}
 
               {detalles.length === 0 && (
-                <div className="text-center py-8 text-base-content/50">
-                  No hay productos agregados. Click en &quot;Agregar
+                <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                  No hay productos agregados. Haz clic en &quot;Agregar
                   Producto&quot;
                 </div>
               )}
@@ -342,7 +357,7 @@ export default function CompraForm({ onClose, onSave }: Props) {
           </div>
 
           {/* Total */}
-          <div className="border-t border-base-300 pt-4">
+          <div className="border-t pt-4">
             <div className="flex justify-end items-center gap-4">
               <span className="text-xl font-semibold">Total:</span>
               <span className="text-3xl font-bold text-primary">
@@ -352,29 +367,28 @@ export default function CompraForm({ onClose, onSave }: Props) {
           </div>
 
           {/* Botones */}
-          <div className="flex gap-3 justify-end pt-4 border-t border-base-300">
+          <ModalFooter>
             <Button
               type="button"
               onClick={onClose}
-              variant="ghost"
+              variant="outline"
               disabled={loading}
             >
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={loading || detalles.length === 0}
-            >
+            <Button type="submit" disabled={loading || detalles.length === 0}>
               {loading ? (
-                <span className="loading loading-spinner"></span>
+                <>
+                  <Loading size="sm" className="mr-2" />
+                  Guardando...
+                </>
               ) : (
                 "Registrar Compra"
               )}
             </Button>
-          </div>
+          </ModalFooter>
         </form>
-      </ModalBody>
+      </ModalContent>
     </Modal>
   );
 }

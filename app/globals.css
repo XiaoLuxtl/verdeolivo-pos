@@ -1,78 +1,98 @@
+/* app/globals.css */
 @import "tailwindcss";
-@plugin "daisyui" {
-  themes: oliveherb --default, oliveherb --prefersdark;
-}
+/* @import "tw-animate-css"; */
 
-@custom-variant dark (&:where([data-theme=oliveherb], [data-theme=oliveherb] *));
-
-@plugin "daisyui/theme" {
-  name: "olive";
-  default: false;
-  prefersdark: false;
-  color-scheme: "light";
-  --color-base-100: #F4F9F2;
-  --color-base-200: #D1DDCC;
-  --color-base-300: #BED3B6;
-  --color-base-content: oklch(21% 0.006 56.043);
-  --color-primary: #60682E;
-  --color-primary-content: oklch(98% 0.014 180.72);
-  --color-secondary: #8A8752;
-  --color-secondary-content: oklch(98% 0.019 200.873);
-  --color-accent: #EFB600;
-  --color-accent-content: oklch(98% 0.026 102.212);
-  --color-neutral: #393A20;
-  --color-neutral-content: oklch(98% 0.001 106.423);
-  --color-info: #0096EA;
-  --color-info-content: oklch(97% 0.014 254.604);
-  --color-success: #00CC66;
-  --color-success-content: oklch(98% 0.018 155.826);
-  --color-warning: oklch(64% 0.222 41.116);
-  --color-warning-content: oklch(98% 0.016 73.684);
-  --color-error: #ED0017;
-  --color-error-content: oklch(97% 0.013 17.38);
-  --radius-selector: 0.25rem;
-  --radius-field: 2rem;
-  --radius-box: 0rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 1px;
-  --depth: 0;
-  --noise: 1;
-}
-
-
-
-@plugin "daisyui/theme" {
-  name: "oliveherb";
-  default: false;
-  prefersdark: false;
-  color-scheme: "light";
-  --color-base-100: #F4F9F2;
-  --color-base-200: oklch(0.934 0.030 147.0);
-  --color-base-300: oklch(0.898 0.053 133.0);
-  --color-base-content: oklch(21% 0.006 56.043);
-  --color-primary: #266531;
-  --color-primary-content: oklch(98% 0.014 180.72);
-  --color-secondary: #7DBB48;
-  --color-secondary-content: oklch(98% 0.019 200.873);
-  --color-accent: #E7A612;
-  --color-accent-content: oklch(98% 0.026 102.212);
-  --color-neutral: oklch(0.161 0.105 147.0);
-  --color-neutral-content: oklch(98% 0.001 106.423);
+@theme inline {
+  /* Colores base - usando tu palette oliveherb */
+  --color-background: #F4F9F2;  /* base-100 */
+  --color-foreground: oklch(21% 0.006 56.043);  /* base-content */
+  
+  /* Card */
+  --color-card: #F4F9F2;  /* base-100 */
+  --color-card-foreground: oklch(21% 0.006 56.043);  /* base-content */
+  
+  /* Popover */
+  --color-popover: #F4F9F2;  /* base-100 */
+  --color-popover-foreground: oklch(21% 0.006 56.043);  /* base-content */
+  
+  /* Primary - tu color principal oliveherb */
+  --color-primary: #266531;  /* primary de oliveherb */
+  --color-primary-foreground: oklch(98% 0.014 180.72);  /* primary-content */
+  
+  /* Secondary */
+  --color-secondary: #7DBB48;  /* secondary de oliveherb */
+  --color-secondary-foreground: oklch(98% 0.019 200.873);  /* secondary-content */
+  
+  /* Accent */
+  --color-accent: #E7A612;  /* accent de oliveherb */
+  --color-accent-foreground: oklch(98% 0.026 102.212);  /* accent-content */
+  
+  /* Muted */
+  --color-muted: oklch(0.934 0.030 147.0);  /* base-200 de oliveherb */
+  --color-muted-foreground: oklch(21% 0.006 56.043);  /* base-content */
+  
+  /* Estados */
+  --color-destructive: #ED0017;  /* error */
+  --color-destructive-foreground: oklch(97% 0.013 17.38);  /* error-content */
+  
+  /* Border e Input */
+  --color-border: oklch(0.898 0.053 133.0);  /* base-300 de oliveherb */
+  --color-input: oklch(0.898 0.053 133.0);  /* base-300 de oliveherb */
+  
+  /* Ring - focus states */
+  --color-ring: #266531;  /* primary */
+  
+  /* Info, Success, Warning - manteniendo tus colores específicos */
   --color-info: #0A76BC;
-  --color-info-content: oklch(97% 0.014 254.604);
+  --color-info-foreground: oklch(97% 0.014 254.604);
   --color-success: oklch(72% 0.219 149.579);
-  --color-success-content: oklch(98% 0.018 155.826);
+  --color-success-foreground: oklch(98% 0.018 155.826);
   --color-warning: oklch(64% 0.222 41.116);
-  --color-warning-content: oklch(98% 0.016 73.684);
-  --color-error: #ED0017;
-  --color-error-content: oklch(97% 0.013 17.38);
-  --radius-selector: 0.25rem;
-  --radius-field: 2rem;
-  --radius-box: 0rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 1px;
-  --depth: 0;
-  --noise: 1;
+  --color-warning-foreground: oklch(98% 0.016 73.684);
+  
+  /* Radius - usando tus valores */
+  --radius: 0rem;  /* radius-box */
+  --radius-sm: 0.25rem;  /* radius-selector */
+  --radius-md: 0.5rem;
+  --radius-lg: 2rem;  /* radius-field */
+  
+  /* Charts */
+  --color-chart-1: #266531;  /* primary */
+  --color-chart-2: #7DBB48;  /* secondary */
+  --color-chart-3: #E7A612;  /* accent */
+  --color-chart-4: #0A76BC;  /* info */
+  --color-chart-5: oklch(72% 0.219 149.579);  /* success */
+  
+  /* Sidebar (si lo necesitas) */
+  --color-sidebar: #F4F9F2;
+  --color-sidebar-foreground: oklch(21% 0.006 56.043);
+  --color-sidebar-primary: #266531;
+  --color-sidebar-primary-foreground: oklch(98% 0.014 180.72);
+  --color-sidebar-accent: oklch(0.934 0.030 147.0);
+  --color-sidebar-accent-foreground: oklch(21% 0.006 56.043);
+  --color-sidebar-border: oklch(0.898 0.053 133.0);
+  --color-sidebar-ring: #266531;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  /* Estilos para scrollbars modernos */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-lg;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
 }

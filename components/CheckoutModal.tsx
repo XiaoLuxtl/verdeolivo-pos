@@ -2,12 +2,21 @@
 "use client";
 
 import { useState } from "react";
-import { X, DollarSign } from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { CartItem } from "@/types/cart";
-import { Button } from "./ui/Button";
-import { Input } from "./ui/Input";
-import { Alert } from "./ui/Alert";
-import { Modal, ModalHeader, ModalBody, ModalActions } from "./ui/Modal";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Card, CardContent } from "./ui/card";
+import { Alert } from "@/components/ui/alert";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalTitle,
+  ModalClose,
+} from "./ui/dialog";
 
 type Props = {
   cart: CartItem[];
@@ -26,7 +35,7 @@ export default function CheckoutModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const recibidoNum = parseFloat(recibido) || 0;
+  const recibidoNum = Number.parseFloat(recibido) || 0;
   const cambio = recibidoNum - total;
 
   const handleConfirm = async () => {
@@ -47,15 +56,13 @@ export default function CheckoutModal({
   };
 
   return (
-    <Modal open={true} onClose={onClose}>
-      <ModalHeader>
-        <h2 className="text-2xl font-bold">Finalizar Venta</h2>
-        <Button onClick={onClose} variant="ghost" size="sm" shape="circle">
-          <X className="w-5 h-5" />
-        </Button>
-      </ModalHeader>
+    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent className="max-w-md">
+        <ModalHeader>
+          <ModalTitle>Finalizar Venta</ModalTitle>
+          <ModalClose />
+        </ModalHeader>
 
-      <ModalBody>
         <div className="space-y-4">
           {error && (
             <Alert variant="error">
@@ -77,7 +84,7 @@ export default function CheckoutModal({
             ))}
           </div>
 
-          <div className="divider"></div>
+          <div className="border-t my-4"></div>
 
           {/* Total */}
           <div className="flex justify-between items-center text-xl font-bold">
@@ -86,42 +93,41 @@ export default function CheckoutModal({
           </div>
 
           {/* Monto recibido */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-semibold">Monto Recibido</span>
-            </label>
-            <label className="input-group">
-              <span className="bg-primary text-primary-content">
-                <DollarSign className="w-5 h-5" />
-              </span>
-              <input
+          <div className="space-y-2">
+            <Label htmlFor="monto-recibido" className="font-semibold">
+              Monto Recibido
+            </Label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+              <Input
+                id="monto-recibido"
                 type="number"
                 step="0.01"
-                className="input input-bordered w-full text-lg"
+                className="pl-10 text-lg"
                 value={recibido}
                 onChange={(e) => setRecibido(e.target.value)}
                 placeholder="0.00"
                 autoFocus
               />
-            </label>
+            </div>
           </div>
 
           {/* Cambio */}
           {recibidoNum > 0 && (
-            <div className="card bg-base-200">
-              <div className="card-body py-4">
+            <Card className="bg-muted/50">
+              <CardContent className="py-4">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold">Cambio:</span>
                   <span
                     className={`text-2xl font-bold ${
-                      cambio >= 0 ? "text-success" : "text-error"
+                      cambio >= 0 ? "text-green-600" : "text-destructive"
                     }`}
                   >
                     ${cambio.toFixed(2)}
                   </span>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Botones de acceso rápido */}
@@ -147,32 +153,32 @@ export default function CheckoutModal({
             </Button>
           </div>
         </div>
-      </ModalBody>
 
-      <ModalActions>
-        <div className="flex gap-3">
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            className="flex-1"
-            disabled={loading}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleConfirm}
-            variant="primary"
-            className="flex-1"
-            disabled={loading || recibidoNum < total}
-          >
-            {loading ? (
-              <span className="loading loading-spinner"></span>
-            ) : (
-              "Confirmar Venta"
-            )}
-          </Button>
-        </div>
-      </ModalActions>
+        <ModalFooter>
+          <div className="flex gap-3 w-full">
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              className="flex-1"
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              variant="default"
+              className="flex-1"
+              disabled={loading || recibidoNum < total}
+            >
+              {loading ? (
+                <span className="loading loading-spinner"></span>
+              ) : (
+                "Confirmar Venta"
+              )}
+            </Button>
+          </div>
+        </ModalFooter>
+      </ModalContent>
     </Modal>
   );
 }
