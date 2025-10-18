@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -14,6 +13,8 @@ import {
   ChevronRight,
   Home,
 } from "lucide-react";
+import { Button } from "./ui/Button";
+import { Menu } from "./ui/Menu";
 
 const menuItems = [
   { icon: Home, label: "POS", href: "/" },
@@ -38,9 +39,11 @@ export default function Sidebar() {
       {/* Header */}
       <div className="p-4 flex items-center justify-between border-b border-primary-content/20">
         {!isMinimized && <h1 className="text-xl font-bold">VerdeOlivo POS</h1>}
-        <button
+        <Button
           onClick={() => setIsMinimized(!isMinimized)}
-          className="btn btn-ghost btn-sm btn-circle"
+          variant="ghost"
+          size="sm"
+          shape="circle"
           aria-label="Toggle sidebar"
         >
           {isMinimized ? (
@@ -48,35 +51,19 @@ export default function Sidebar() {
           ) : (
             <ChevronLeft className="w-5 h-5" />
           )}
-        </button>
+        </Button>
       </div>
 
       {/* Menu Items */}
-      <nav className="flex-1 overflow-y-auto py-4">
-        <ul className="menu p-2 gap-1">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`
-                    ${isActive ? "active bg-primary-content/20" : ""}
-                    ${isMinimized ? "justify-center" : ""}
-                    tooltip tooltip-right
-                  `}
-                  data-tip={isMinimized ? item.label : ""}
-                >
-                  <Icon className="w-5 h-5" />
-                  {!isMinimized && <span>{item.label}</span>}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      <div className="flex-1 overflow-y-auto py-4">
+        <Menu
+          items={menuItems.map((item) => ({
+            ...item,
+            active: pathname === item.href,
+          }))}
+          minimized={isMinimized}
+        />
+      </div>
 
       {/* Footer */}
       <div className="p-4 border-t border-primary-content/20">

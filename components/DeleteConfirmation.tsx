@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
+import { Button } from "./ui/Button";
+import { Input } from "./ui/Input";
+import { Alert } from "./ui/Alert";
+import { Modal, ModalBody, ModalActions } from "./ui/Modal";
 
 type Props = {
   title: string;
@@ -39,62 +43,57 @@ export default function DeleteConfirmation({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-base-100 rounded-lg shadow-xl max-w-md w-full">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="bg-error/10 p-3 rounded-full">
-              <AlertTriangle className="w-6 h-6 text-error" />
-            </div>
-            <h3 className="text-xl font-bold text-base-content">{title}</h3>
+    <Modal open={true} onClose={onCancel}>
+      <ModalBody>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-error/10 p-3 rounded-full">
+            <AlertTriangle className="w-6 h-6 text-error" />
           </div>
-
-          <p className="text-base-content/70 mb-4">{message}</p>
-
-          {error && (
-            <div className="alert alert-error mb-4">
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className="form-control mb-6">
-            <label className="label">
-              <span className="label-text">
-                Escribe <strong>{confirmText}</strong> para confirmar
-              </span>
-            </label>
-            <input
-              type="text"
-              className="input input-bordered"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={confirmText}
-              disabled={loading}
-            />
-          </div>
-
-          <div className="flex gap-3 justify-end">
-            <button
-              onClick={onCancel}
-              className="btn btn-ghost"
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleConfirm}
-              className="btn btn-error"
-              disabled={inputValue !== confirmText || loading}
-            >
-              {loading ? (
-                <span className="loading loading-spinner"></span>
-              ) : (
-                "Eliminar"
-              )}
-            </button>
-          </div>
+          <h3 className="text-xl font-bold text-base-content">{title}</h3>
         </div>
-      </div>
-    </div>
+
+        <p className="text-base-content/70 mb-4">{message}</p>
+
+        {error && (
+          <div className="alert alert-error mb-4">
+            <span>{error}</span>
+          </div>
+        )}
+
+        <div className="form-control mb-6">
+          <label className="label">
+            <span className="label-text">
+              Escribe <strong>{confirmText}</strong> para confirmar
+            </span>
+          </label>
+          <Input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder={confirmText}
+            disabled={loading}
+          />
+        </div>
+      </ModalBody>
+
+      <ModalActions>
+        <div className="flex gap-3 justify-end">
+          <Button onClick={onCancel} variant="ghost" disabled={loading}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            variant="error"
+            disabled={inputValue !== confirmText || loading}
+          >
+            {loading ? (
+              <span className="loading loading-spinner"></span>
+            ) : (
+              "Eliminar"
+            )}
+          </Button>
+        </div>
+      </ModalActions>
+    </Modal>
   );
 }

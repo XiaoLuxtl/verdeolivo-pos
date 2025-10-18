@@ -4,6 +4,10 @@
 import { useState } from "react";
 import { X, DollarSign } from "lucide-react";
 import { CartItem } from "@/types/cart";
+import { Button } from "./ui/Button";
+import { Input } from "./ui/Input";
+import { Alert } from "./ui/Alert";
+import { Modal, ModalHeader, ModalBody, ModalActions } from "./ui/Modal";
 
 type Props = {
   cart: CartItem[];
@@ -43,22 +47,20 @@ export default function CheckoutModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-base-100 rounded-lg shadow-xl max-w-md w-full">
-        <div className="flex items-center justify-between p-6 border-b border-base-300">
-          <h2 className="text-2xl font-bold text-base-content">
-            Finalizar Venta
-          </h2>
-          <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Modal open={true} onClose={onClose}>
+      <ModalHeader>
+        <h2 className="text-2xl font-bold">Finalizar Venta</h2>
+        <Button onClick={onClose} variant="ghost" size="sm" shape="circle">
+          <X className="w-5 h-5" />
+        </Button>
+      </ModalHeader>
 
-        <div className="p-6 space-y-4">
+      <ModalBody>
+        <div className="space-y-4">
           {error && (
-            <div className="alert alert-error">
+            <Alert variant="error">
               <span>{error}</span>
-            </div>
+            </Alert>
           )}
 
           {/* Resumen */}
@@ -125,47 +127,52 @@ export default function CheckoutModal({
           {/* Botones de acceso rápido */}
           <div className="grid grid-cols-3 gap-2">
             {[50, 100, 200, 500, 1000].map((monto) => (
-              <button
+              <Button
                 key={monto}
                 type="button"
                 onClick={() => setRecibido(monto.toString())}
-                className="btn btn-sm btn-outline"
+                variant="outline"
+                size="sm"
               >
                 ${monto}
-              </button>
+              </Button>
             ))}
-            <button
+            <Button
               type="button"
               onClick={() => setRecibido(total.toString())}
-              className="btn btn-sm btn-outline"
+              variant="outline"
+              size="sm"
             >
               Exacto
-            </button>
-          </div>
-
-          {/* Botones */}
-          <div className="flex gap-3 pt-4">
-            <button
-              onClick={onClose}
-              className="btn btn-ghost flex-1"
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleConfirm}
-              className="btn btn-primary flex-1"
-              disabled={loading || recibidoNum < total}
-            >
-              {loading ? (
-                <span className="loading loading-spinner"></span>
-              ) : (
-                "Confirmar Venta"
-              )}
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </ModalBody>
+
+      <ModalActions>
+        <div className="flex gap-3">
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            className="flex-1"
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            variant="primary"
+            className="flex-1"
+            disabled={loading || recibidoNum < total}
+          >
+            {loading ? (
+              <span className="loading loading-spinner"></span>
+            ) : (
+              "Confirmar Venta"
+            )}
+          </Button>
+        </div>
+      </ModalActions>
+    </Modal>
   );
 }

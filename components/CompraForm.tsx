@@ -3,6 +3,11 @@
 
 import { useState, useEffect } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
+import { Button } from "./ui/Button";
+import { Input } from "./ui/Input";
+import { Select } from "./ui/Select";
+import { Alert } from "./ui/Alert";
+import { Modal, ModalHeader, ModalBody, ModalActions } from "./ui/Modal";
 
 type Producto = {
   id: number;
@@ -10,6 +15,7 @@ type Producto = {
   sku: string;
   precioUnitario: number;
   unidad: string;
+  peso: number;
 };
 
 type DetalleCompra = {
@@ -155,22 +161,20 @@ export default function CompraForm({ onClose, onSave }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-base-100 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-base-300">
-          <h2 className="text-2xl font-bold text-base-content">
-            Registrar Compra
-          </h2>
-          <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Modal open={true} onClose={onClose}>
+      <ModalHeader>
+        <h2 className="text-2xl font-bold">Registrar Compra</h2>
+        <Button onClick={onClose} variant="ghost" size="sm" shape="circle">
+          <X className="w-5 h-5" />
+        </Button>
+      </ModalHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <ModalBody>
+        <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="alert alert-error">
+            <Alert variant="error">
               <span>{error}</span>
-            </div>
+            </Alert>
           )}
 
           {/* Datos generales */}
@@ -179,10 +183,9 @@ export default function CompraForm({ onClose, onSave }: Props) {
               <label className="label">
                 <span className="label-text">Fecha *</span>
               </label>
-              <input
+              <Input
                 type="date"
                 required
-                className="input input-bordered"
                 value={formData.fecha}
                 onChange={(e) =>
                   setFormData({ ...formData, fecha: e.target.value })
@@ -194,10 +197,9 @@ export default function CompraForm({ onClose, onSave }: Props) {
               <label className="label">
                 <span className="label-text">Proveedor *</span>
               </label>
-              <input
+              <Input
                 type="text"
                 required
-                className="input input-bordered"
                 value={formData.proveedor}
                 onChange={(e) =>
                   setFormData({ ...formData, proveedor: e.target.value })
@@ -226,14 +228,15 @@ export default function CompraForm({ onClose, onSave }: Props) {
           <div className="border-t border-base-300 pt-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Productos</h3>
-              <button
+              <Button
                 type="button"
                 onClick={agregarDetalle}
-                className="btn btn-primary btn-sm"
+                variant="primary"
+                size="sm"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Agregar Producto
-              </button>
+              </Button>
             </div>
 
             <div className="space-y-3">
@@ -243,9 +246,9 @@ export default function CompraForm({ onClose, onSave }: Props) {
                     {/* Producto */}
                     <div className="form-control md:col-span-2">
                       <label className="label label-text">Producto</label>
-                      <select
+                      <Select
                         required
-                        className="select select-bordered select-sm"
+                        size="sm"
                         value={detalle.productoId}
                         onChange={(e) =>
                           actualizarDetalle(index, "productoId", e.target.value)
@@ -258,7 +261,7 @@ export default function CompraForm({ onClose, onSave }: Props) {
                             {p.unidad}/unidad)
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
 
                     {/* Cantidad */}
@@ -316,13 +319,14 @@ export default function CompraForm({ onClose, onSave }: Props) {
                           value={`$${detalle.subtotal.toFixed(2)}`}
                         />
                       </div>
-                      <button
+                      <Button
                         type="button"
                         onClick={() => eliminarDetalle(index)}
-                        className="btn btn-error btn-sm"
+                        variant="error"
+                        size="sm"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -348,17 +352,17 @@ export default function CompraForm({ onClose, onSave }: Props) {
 
           {/* Botones */}
           <div className="flex gap-3 justify-end pt-4 border-t border-base-300">
-            <button
+            <Button
               type="button"
               onClick={onClose}
-              className="btn btn-ghost"
+              variant="ghost"
               disabled={loading}
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="btn btn-primary"
+              variant="primary"
               disabled={loading || detalles.length === 0}
             >
               {loading ? (
@@ -366,10 +370,10 @@ export default function CompraForm({ onClose, onSave }: Props) {
               ) : (
                 "Registrar Compra"
               )}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </ModalBody>
+    </Modal>
   );
 }
