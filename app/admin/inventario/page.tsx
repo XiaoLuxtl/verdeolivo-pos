@@ -10,6 +10,8 @@ import {
   Edit3,
   ChevronDown,
   ChevronUp,
+  AlertTriangle,
+  AlertCircle,
 } from "lucide-react";
 import MovimientoForm from "@/components/MovimientoForm";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,8 @@ type Producto = {
   nombre: string;
   sku: string;
   unidad: string;
+  stockMinimo: number;
+  descripcionUmbral?: string;
   inventario: {
     id: number;
     cantidadActual: number;
@@ -61,7 +65,9 @@ export default function InventarioPage() {
   const [selectedProducto, setSelectedProducto] = useState<
     { id: number; nombre: string } | undefined
   >();
-  const [filter, setFilter] = useState<"todos" | "bajo" | "sin-stock">("todos");
+  const [filter, setFilter] = useState<
+    "todos" | "bajo" | "critico" | "sin-stock"
+  >("todos");
 
   useEffect(() => {
     fetchData();
@@ -88,10 +94,10 @@ export default function InventarioPage() {
 
   const getProductosFiltrados = () => {
     switch (filter) {
+      case "critico":
+        return productos.filter((p) => getStockStatus(p) === "critico");
       case "bajo":
-        return productos.filter(
-          (p) => (p.inventario?.cantidadActual || 0) < 100
-        );
+        return productos.filter((p) => getStockStatus(p) === "bajo");
       case "sin-stock":
         return productos.filter(
           (p) => (p.inventario?.cantidadActual || 0) === 0
@@ -101,10 +107,51 @@ export default function InventarioPage() {
     }
   };
 
-  const getBadgeVariant = (cantidad: number) => {
+  const getBadgeVariant = (producto: Producto) => {
+    const cantidad = producto.inventario?.cantidadActual || 0;
+    const stockMinimo = producto.stockMinimo || 5;
+
     if (cantidad === 0) return "destructive";
-    if (cantidad < 100) return "warning";
-    return "success";
+    if (cantidad <= stockMinimo) return "destructive"; // Stock crítico
+    if (cantidad <= stockMinimo * 1.5) return "warning"; // Stock bajo
+    return "default"; // Stock normal
+  };
+
+  const getStockStatus = (producto: Producto) => {
+    const cantidad = producto.inventario?.cantidadActual || 0;
+    const stockMinimo = producto.stockMinimo || 5;
+
+    if (cantidad === 0) return "sin-stock";
+    if (cantidad <= stockMinimo) return "critico";
+    if (cantidad <= stockMinimo * 1.5) return "bajo";
+    return "normal";
+  };
+
+  const getStockIcon = (producto: Producto) => {
+    const status = getStockStatus(producto);
+    switch (status) {
+      case "sin-stock":
+        return <AlertCircle className="w-4 h-4 text-red-600" />;
+      case "critico":
+        return <AlertTriangle className="w-4 h-4 text-red-500" />;
+      case "bajo":
+        return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
+      default:
+        return null;
+    }
+  };
+
+  const getRowClassName = (producto: Producto) => {
+    const status = getStockStatus(producto);
+    switch (status) {
+      case "sin-stock":
+      case "critico":
+        return "bg-red-50 border-red-200";
+      case "bajo":
+        return "bg-yellow-50 border-yellow-200";
+      default:
+        return "";
+    }
   };
 
   const formatFecha = (fecha: string) => {
@@ -188,26 +235,25 @@ export default function InventarioPage() {
         </Card>
         <Card className="shadow-lg">
           <CardContent className="p-6">
-            <h3 className="text-sm text-muted-foreground">Stock Bajo</h3>
-            <p className="text-3xl font-bold text-yellow-600">
-              {
-                productos.filter((p) => {
-                  const stock = p.inventario?.cantidadActual || 0;
-                  return stock > 0 && stock < 100;
-                }).length
-              }
+            <h3 className="text-sm text-muted-foreground">Stock Crítico</h3>
+            <p className="text-3xl font-bold text-red-500">
+              {productos.filter((p) => getStockStatus(p) === "critico").length}
             </p>
           </CardContent>
         </Card>
         <Card className="shadow-lg">
           <CardContent className="p-6">
-            <h3 className="text-sm text-muted-foreground">Con Stock</h3>
+            <h3 className="text-sm text-muted-foreground">Stock Bajo</h3>
+            <p className="text-3xl font-bold text-yellow-600">
+              {productos.filter((p) => getStockStatus(p) === "bajo").length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <h3 className="text-sm text-muted-foreground">Stock Normal</h3>
             <p className="text-3xl font-bold text-green-600">
-              {
-                productos.filter(
-                  (p) => (p.inventario?.cantidadActual || 0) >= 100
-                ).length
-              }
+              {productos.filter((p) => getStockStatus(p) === "normal").length}
             </p>
           </CardContent>
         </Card>
@@ -230,6 +276,13 @@ export default function InventarioPage() {
               size="sm"
             >
               Sin Stock
+            </Button>
+            <Button
+              onClick={() => setFilter("critico")}
+              variant={filter === "critico" ? "destructive" : "ghost"}
+              size="sm"
+            >
+              Stock Crítico
             </Button>
             <Button
               onClick={() => setFilter("bajo")}
@@ -263,7 +316,8 @@ export default function InventarioPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Producto</TableHead>
-                      <TableHead>Stock</TableHead>
+                      <TableHead>Stock Actual</TableHead>
+                      <TableHead>Stock Mínimo</TableHead>
                       <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -271,7 +325,7 @@ export default function InventarioPage() {
                     {productosFiltrados.length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={3}
+                          colSpan={4}
                           className="text-center py-8 text-muted-foreground"
                         >
                           No hay productos
@@ -280,22 +334,47 @@ export default function InventarioPage() {
                     ) : (
                       productosFiltrados.map((producto) => {
                         const stock = producto.inventario?.cantidadActual || 0;
+                        const status = getStockStatus(producto);
                         return (
-                          <TableRow key={producto.id}>
+                          <TableRow
+                            key={producto.id}
+                            className={getRowClassName(producto)}
+                          >
                             <TableCell>
-                              <div>
-                                <p className="font-semibold">
-                                  {producto.nombre}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {producto.sku}
-                                </p>
+                              <div className="flex items-center gap-2">
+                                {getStockIcon(producto)}
+                                <div>
+                                  <p className="font-semibold">
+                                    {producto.nombre}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {producto.sku}
+                                  </p>
+                                  {status === "critico" &&
+                                    producto.descripcionUmbral && (
+                                      <p className="text-xs text-red-600 mt-1">
+                                        ⚠️ {producto.descripcionUmbral}
+                                      </p>
+                                    )}
+                                </div>
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={getBadgeVariant(stock)}>
-                                {stock} {producto.unidad}
-                              </Badge>
+                              <div className="flex items-center gap-2">
+                                <Badge variant={getBadgeVariant(producto)}>
+                                  {stock} {producto.unidad}
+                                </Badge>
+                                {status === "critico" && (
+                                  <span className="text-xs text-red-600 font-medium">
+                                    ≤ {producto.stockMinimo}
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm text-muted-foreground">
+                                {producto.stockMinimo} {producto.unidad}
+                              </span>
                             </TableCell>
                             <TableCell>
                               <Button

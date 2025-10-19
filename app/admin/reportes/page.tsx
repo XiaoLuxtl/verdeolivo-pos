@@ -120,6 +120,11 @@ export default function ReportesPage() {
     }
   };
 
+  const generarReporteDetallado = () => {
+    const url = `/api/reportes/detallado?periodo=${periodoVentas}`;
+    window.open(url, "_blank");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -132,11 +137,28 @@ export default function ReportesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-foreground">Reportes</h1>
-        <Button variant="outline">
-          <Download className="w-5 h-5 mr-2" />
-          Exportar PDF
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={generarReporteDetallado}>
+            <BarChart3 className="w-5 h-5 mr-2" />
+            Reporte Detallado
+          </Button>
+          <Button variant="outline">
+            <Download className="w-5 h-5 mr-2" />
+            Exportar PDF
+          </Button>
+        </div>
       </div>
+
+      {/* Información sobre reportes detallados */}
+      <Alert className="mb-6">
+        <BarChart3 className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Reportes Detallados:</strong> Incluyen análisis completo de
+          ventas, insumos gastados, cálculos de ganancia teórica y desglose por
+          hora. Haz clic en "Reporte Detallado" para generar un documento HTML
+          completo.
+        </AlertDescription>
+      </Alert>
 
       {/* SECCIÓN: VENTAS */}
       <div className="mb-8">

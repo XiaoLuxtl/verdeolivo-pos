@@ -16,12 +16,17 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DescuentoSelector } from "@/components/DescuentoSelector";
+import { AlertaStock } from "@/components/AlertaStock";
 
 type Props = {
   readonly cart: CartItem[];
   readonly total: number;
   readonly onClose: () => void;
-  readonly onConfirm: (recibido: number) => Promise<void>;
+  readonly onConfirm: (
+    recibido: number,
+    descuentoData?: any
+  ) => Promise<{ alertas?: any[] }>;
 };
 
 export default function CheckoutModal({
@@ -33,12 +38,17 @@ export default function CheckoutModal({
   const [recibido, setRecibido] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [descuentoData, setDescuentoData] = useState<any>(null);
+  const [alertas, setAlertas] = useState<any[]>([]);
 
+  const subtotal = total;
+  const descuento = descuentoData?.descuento || 0;
+  const totalConDescuento = subtotal - descuento;
   const recibidoNum = Number.parseFloat(recibido) || 0;
-  const cambio = recibidoNum - total;
+  const cambio = recibidoNum - totalConDescuento;
 
   const handleConfirm = async () => {
-    if (recibidoNum < total) {
+    if (recibidoNum < totalConDescuento) {
       setError("El monto recibido es menor al total");
       return;
     }
@@ -47,7 +57,10 @@ export default function CheckoutModal({
     setError("");
 
     try {
-      await onConfirm(recibidoNum);
+      const result = await onConfirm(recibidoNum, descuentoData);
+      if (result?.alertas) {
+        setAlertas(result.alertas);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error desconocido");
       setLoading(false);
@@ -68,6 +81,9 @@ export default function CheckoutModal({
             </Alert>
           )}
 
+          {/* Alertas de Stock */}
+          <AlertaStock alertas={alertas} />
+
           {/* Resumen */}
           <div className="space-y-2">
             {cart.map((item) => (
@@ -82,12 +98,33 @@ export default function CheckoutModal({
             ))}
           </div>
 
+          {/* Selector de Descuentos */}
+          <DescuentoSelector subtotal={subtotal} onChange={setDescuentoData} />
+
           <div className="border-t my-4"></div>
+
+          {/* Subtotal */}
+          {descuento > 0 && (
+            <div className="flex justify-between items-center text-lg">
+              <span>Subtotal:</span>
+              <span>${subtotal.toFixed(2)}</span>
+            </div>
+          )}
+
+          {/* Descuento */}
+          {descuento > 0 && (
+            <div className="flex justify-between items-center text-lg text-green-600">
+              <span>Descuento:</span>
+              <span>-${descuento.toFixed(2)}</span>
+            </div>
+          )}
 
           {/* Total */}
           <div className="flex justify-between items-center text-xl font-bold">
             <span>Total:</span>
-            <span className="text-primary">${total.toFixed(2)}</span>
+            <span className="text-primary">
+              ${totalConDescuento.toFixed(2)}
+            </span>
           </div>
 
           {/* Monto recibido */}
@@ -143,7 +180,7 @@ export default function CheckoutModal({
             ))}
             <Button
               type="button"
-              onClick={() => setRecibido(total.toString())}
+              onClick={() => setRecibido(totalConDescuento.toString())}
               variant="outline"
               size="sm"
             >

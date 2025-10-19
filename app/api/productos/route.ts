@@ -27,16 +27,25 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
+    // Calcular precio por unidad
+    const precioUnitarioNum = Number.parseFloat(body.precioUnitario);
+    const pesoNum = body.peso ? Number.parseFloat(body.peso) : null;
+    const precioPorUnidad =
+      pesoNum && pesoNum > 0 ? precioUnitarioNum / pesoNum : precioUnitarioNum;
+
     const producto = await prisma.producto.create({
       data: {
         sku: body.sku,
         nombre: body.nombre,
         sabor: body.sabor || null,
         proveedor: body.proveedor || null,
-        precioUnitario: parseFloat(body.precioUnitario),
-        peso: body.peso ? parseFloat(body.peso) : null,
+        precioUnitario: precioUnitarioNum,
+        peso: pesoNum,
+        precioPorUnidad: precioPorUnidad,
         unidad: body.unidad,
         descripcion: body.descripcion || null,
+        stockMinimo: body.stockMinimo ? Number.parseFloat(body.stockMinimo) : 5,
+        descripcionUmbral: body.descripcionUmbral || null,
         inventario: {
           create: {
             cantidadActual: 0,

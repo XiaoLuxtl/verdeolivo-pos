@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import ImageUpload from "./ImageUpload";
+import { CategoriaSelector } from "./CategoriaSelector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ import {
 type Receta = {
   id?: number;
   nombre: string;
+  categoria: string;
   descripcion: string;
   precioVenta: string;
   imagen: string | null;
@@ -31,6 +33,7 @@ type Props = {
 export default function RecetaForm({ receta, onClose, onSave }: Props) {
   const [formData, setFormData] = useState<Receta>({
     nombre: "",
+    categoria: "OTRO",
     descripcion: "",
     precioVenta: "",
     imagen: null,
@@ -113,6 +116,19 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
                 placeholder="Ej. Malteada de Uva"
               />
             </div>
+
+            {/* Categoría */}
+            <CategoriaSelector
+              value={
+                formData.categoria as
+                  | "MALTEADA"
+                  | "ALOE"
+                  | "SHAKE"
+                  | "SUPLEMENTO"
+                  | "OTRO"
+              }
+              onChange={(categoria) => setFormData({ ...formData, categoria })}
+            />
 
             {/* Precio de Venta */}
             <div className="space-y-2">

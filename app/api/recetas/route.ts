@@ -34,8 +34,9 @@ export async function POST(request: Request) {
     const receta = await prisma.receta.create({
       data: {
         nombre: body.nombre,
+        categoria: body.categoria || null,
         descripcion: body.descripcion || null,
-        precioVenta: parseFloat(body.precioVenta),
+        precioVenta: Number.parseFloat(body.precioVenta),
         imagen: body.imagen || null,
       },
       include: {

@@ -10,7 +10,6 @@ import ProductoForm, {
 import DeleteConfirmation from "@/components/DeleteConfirmation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -31,8 +30,11 @@ type Producto = {
   proveedor: string | null;
   precioUnitario: number;
   peso: number | null;
+  precioPorUnidad: number | null;
   unidad: string;
   descripcion: string | null;
+  stockMinimo: number;
+  descripcionUmbral: string | null;
   inventario: {
     cantidadActual: number;
     unidad: string;
@@ -88,8 +90,11 @@ export default function ProductosPage() {
       proveedor: producto.proveedor || "",
       precioUnitario: producto.precioUnitario.toString(),
       peso: producto.peso?.toString() || "",
+      precioPorUnidad: producto.precioPorUnidad?.toString() || "",
       unidad: producto.unidad,
       descripcion: producto.descripcion || "",
+      stockMinimo: producto.stockMinimo.toString(),
+      descripcionUmbral: producto.descripcionUmbral || "",
     });
     setShowForm(true);
   };
@@ -169,6 +174,7 @@ export default function ProductosPage() {
                   <TableHead>Precio</TableHead>
                   <TableHead>Peso/Cantidad</TableHead>
                   <TableHead>Unidad</TableHead>
+                  <TableHead>Stock Mínimo</TableHead>
                   <TableHead>Proveedor</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
@@ -177,7 +183,7 @@ export default function ProductosPage() {
                 {filteredProductos.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={8}
+                      colSpan={9}
                       className="text-center py-8 text-muted-foreground"
                     >
                       No hay productos registrados
@@ -222,6 +228,18 @@ export default function ProductosPage() {
                         </div>
                       </TableCell>
                       <TableCell>{producto.unidad}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">
+                            {producto.stockMinimo} {producto.unidad}
+                          </span>
+                          {producto.descripcionUmbral && (
+                            <span className="text-xs text-muted-foreground">
+                              💬 {producto.descripcionUmbral}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>{producto.proveedor || "-"}</TableCell>
                       <TableCell>
                         <div className="flex gap-2 justify-end">

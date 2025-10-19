@@ -9,7 +9,7 @@ export async function GET(
   try {
     const { id } = await params;
     const producto = await prisma.producto.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: Number.parseInt(id) },
       include: {
         inventario: true,
       },
@@ -41,17 +41,28 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
+    // Calcular precio por unidad
+    const precioUnitarioNum = Number.parseFloat(body.precioUnitario);
+    const pesoNum = body.peso ? Number.parseFloat(body.peso) : null;
+    const precioPorUnidad =
+      pesoNum && pesoNum > 0 ? precioUnitarioNum / pesoNum : precioUnitarioNum;
+
     const producto = await prisma.producto.update({
-      where: { id: parseInt(id) },
+      where: { id: Number.parseInt(id) },
       data: {
         sku: body.sku,
         nombre: body.nombre,
         sabor: body.sabor || null,
         proveedor: body.proveedor || null,
-        precioUnitario: parseFloat(body.precioUnitario),
-        peso: body.peso ? parseFloat(body.peso) : null,
+        precioUnitario: precioUnitarioNum,
+        peso: pesoNum,
+        precioPorUnidad: precioPorUnidad,
         unidad: body.unidad,
         descripcion: body.descripcion || null,
+        stockMinimo: body.stockMinimo
+          ? Number.parseFloat(body.stockMinimo)
+          : undefined,
+        descripcionUmbral: body.descripcionUmbral || null,
       },
       include: {
         inventario: true,
@@ -90,7 +101,7 @@ export async function DELETE(
     const { id } = await params;
     // Verificar si el producto está en uso en recetas
     const recetasUsando = await prisma.recetaIngrediente.count({
-      where: { productoId: parseInt(id) },
+      where: { productoId: Number.parseInt(id) },
     });
 
     if (recetasUsando > 0) {
@@ -103,7 +114,7 @@ export async function DELETE(
     }
 
     await prisma.producto.delete({
-      where: { id: parseInt(id) },
+      where: { id: Number.parseInt(id) },
     });
 
     return NextResponse.json({ message: "Producto eliminado" });

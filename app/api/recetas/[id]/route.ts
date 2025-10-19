@@ -9,7 +9,7 @@ export async function GET(
   try {
     const { id } = await params;
     const receta = await prisma.receta.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: Number.parseInt(id) },
       include: {
         ingredientes: {
           include: {
@@ -46,11 +46,12 @@ export async function PUT(
     const body = await request.json();
 
     const receta = await prisma.receta.update({
-      where: { id: parseInt(id) },
+      where: { id: Number.parseInt(id) },
       data: {
         nombre: body.nombre,
+        categoria: body.categoria || null,
         descripcion: body.descripcion || null,
-        precioVenta: parseFloat(body.precioVenta),
+        precioVenta: Number.parseFloat(body.precioVenta),
         imagen: body.imagen || null,
       },
       include: {
@@ -81,7 +82,7 @@ export async function DELETE(
     const { id } = await params;
     // Verificar si la receta tiene ventas
     const ventasCount = await prisma.detalleVenta.count({
-      where: { recetaId: parseInt(id) },
+      where: { recetaId: Number.parseInt(id) },
     });
 
     if (ventasCount > 0) {
@@ -94,7 +95,7 @@ export async function DELETE(
     }
 
     await prisma.receta.delete({
-      where: { id: parseInt(id) },
+      where: { id: Number.parseInt(id) },
     });
 
     return NextResponse.json({ message: "Receta eliminada" });

@@ -29,8 +29,11 @@ export type Producto = {
   proveedor: string;
   precioUnitario: string;
   peso: string;
+  precioPorUnidad: string;
   unidad: string;
   descripcion: string;
+  stockMinimo: string;
+  descripcionUmbral: string;
 };
 
 type Props = {
@@ -49,8 +52,11 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
     proveedor: "",
     precioUnitario: "",
     peso: "",
+    precioPorUnidad: "",
     unidad: "gr",
     descripcion: "",
+    stockMinimo: "",
+    descripcionUmbral: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -60,6 +66,25 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
       setFormData(producto);
     }
   }, [producto]);
+
+  // Calcular precio por unidad automáticamente
+  useEffect(() => {
+    const precioUnitario = parseFloat(formData.precioUnitario) || 0;
+    const peso = parseFloat(formData.peso) || 0;
+
+    if (precioUnitario > 0) {
+      const precioPorUnidad = peso > 0 ? precioUnitario / peso : precioUnitario;
+      setFormData((prev) => ({
+        ...prev,
+        precioPorUnidad: precioPorUnidad.toFixed(4),
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        precioPorUnidad: "",
+      }));
+    }
+  }, [formData.precioUnitario, formData.peso]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,6 +242,24 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Precio por Unidad (calculado automáticamente) */}
+              <div className="space-y-2">
+                <Label htmlFor="precioPorUnidad">
+                  Precio por {formData.unidad}
+                </Label>
+                <Input
+                  id="precioPorUnidad"
+                  type="number"
+                  step="0.0001"
+                  value={formData.precioPorUnidad}
+                  readOnly
+                  className="bg-gray-50"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Calculado automáticamente: Precio Unitario ÷ Peso/Cantidad
+                </p>
+              </div>
             </div>
 
             {/* Descripción */}
@@ -230,6 +273,56 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
                 }
                 rows={3}
               />
+            </div>
+
+            {/* Configuración de Stock */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="stockMinimo"
+                  className="flex items-center gap-2"
+                >
+                  🔔 Stock Mínimo *
+                  <span className="text-xs text-muted-foreground">
+                    (alerta cuando ≤ este valor)
+                  </span>
+                </Label>
+                <Input
+                  id="stockMinimo"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                  value={formData.stockMinimo}
+                  onChange={(e) =>
+                    setFormData({ ...formData, stockMinimo: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="descripcionUmbral"
+                  className="flex items-center gap-2"
+                >
+                  📝 Mensaje de Alerta
+                  <span className="text-xs text-muted-foreground">
+                    (opcional, se muestra cuando hay poco stock)
+                  </span>
+                </Label>
+                <Input
+                  id="descripcionUmbral"
+                  type="text"
+                  placeholder="ej: Reponer urgentemente"
+                  value={formData.descripcionUmbral}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      descripcionUmbral: e.target.value,
+                    })
+                  }
+                />
+              </div>
             </div>
           </form>
         </div>

@@ -31,6 +31,7 @@ type IngredienteReceta = {
 type Receta = {
   id: number;
   nombre: string;
+  categoria: string;
   descripcion: string | null;
   precioVenta: number;
   imagen: string | null;
@@ -40,6 +41,7 @@ type Receta = {
 type RecetaFormData = {
   id?: number;
   nombre: string;
+  categoria: string;
   descripcion: string;
   precioVenta: string;
   imagen: string | null;
@@ -90,6 +92,7 @@ export default function RecetasPage() {
     setSelectedReceta({
       id: receta.id,
       nombre: receta.nombre,
+      categoria: receta.categoria,
       descripcion: receta.descripcion || "",
       precioVenta: receta.precioVenta.toString(),
       imagen: receta.imagen,
@@ -164,103 +167,131 @@ export default function RecetasPage() {
         </CardContent>
       </Card>
 
-      {/* Grid de recetas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredRecetas.length === 0 ? (
-          <div className="col-span-full">
-            <Card className="flex flex-col items-center justify-center py-12">
-              <CardContent className="text-center">
-                <ChefHat className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-                <CardTitle className="text-xl mb-2">
-                  No hay recetas registradas
-                </CardTitle>
-                <p className="text-muted-foreground mb-4">
-                  Crea tu primera receta para comenzar a vender
-                </p>
-                <Button onClick={() => setShowForm(true)} variant="default">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Crear primera receta
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          filteredRecetas.map((receta) => (
-            <Card
-              key={receta.id}
-              className="overflow-hidden hover:shadow-lg transition-shadow"
-            >
-              {/* Imagen */}
-              <div className="h-48 bg-muted flex items-center justify-center">
-                {receta.imagen ? (
-                  <img
-                    src={receta.imagen}
-                    alt={receta.nombre}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full text-muted-foreground/50">
-                    <span className="text-6xl">🍽️</span>
-                  </div>
-                )}
-              </div>
+      {/* Recetas agrupadas por categoría */}
+      {filteredRecetas.length === 0 ? (
+        <Card className="flex flex-col items-center justify-center py-12">
+          <CardContent className="text-center">
+            <ChefHat className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+            <CardTitle className="text-xl mb-2">
+              No hay recetas registradas
+            </CardTitle>
+            <p className="text-muted-foreground mb-4">
+              Crea tu primera receta para comenzar a vender
+            </p>
+            <Button onClick={() => setShowForm(true)} variant="default">
+              <Plus className="w-4 h-4 mr-2" />
+              Crear primera receta
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        (() => {
+          // Agrupar recetas por categoría
+          const recetasPorCategoria = filteredRecetas.reduce((acc, receta) => {
+            const categoria = receta.categoria;
+            if (!acc[categoria]) {
+              acc[categoria] = [];
+            }
+            acc[categoria].push(receta);
+            return acc;
+          }, {} as Record<string, Receta[]>);
 
-              <CardHeader>
-                <CardTitle className="text-lg">{receta.nombre}</CardTitle>
-                {receta.descripcion && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {receta.descripcion}
-                  </p>
-                )}
-              </CardHeader>
-
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-primary">
-                    ${receta.precioVenta.toFixed(2)}
-                  </span>
-                  <Badge variant="secondary">
-                    {receta.ingredientes.length} ingredientes
+          return Object.entries(recetasPorCategoria).map(
+            ([categoria, recetasCategoria]) => (
+              <div key={categoria} className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-bold text-foreground capitalize">
+                    {categoria.toLowerCase().replace("_", " ")}
+                  </h2>
+                  <Badge variant="outline" className="text-sm">
+                    {recetasCategoria.length} receta
+                    {recetasCategoria.length === 1 ? "" : "s"}
                   </Badge>
                 </div>
-              </CardContent>
 
-              <CardFooter className="flex justify-end gap-2">
-                <Button
-                  onClick={() => handleShowIngredientes(receta)}
-                  variant="ghost"
-                  size="sm"
-                  title="Ver ingredientes"
-                  className="h-8 w-8 p-0"
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-                <Button
-                  onClick={() => handleEdit(receta)}
-                  variant="ghost"
-                  size="sm"
-                  title="Editar"
-                  className="h-8 w-8 p-0"
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
-                <Button
-                  onClick={() => {
-                    setRecetaToDelete(receta);
-                    setShowDeleteConfirm(true);
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  title="Eliminar"
-                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </CardFooter>
-            </Card>
-          ))
-        )}
-      </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {recetasCategoria.map((receta) => (
+                    <Card
+                      key={receta.id}
+                      className="overflow-hidden hover:shadow-lg transition-shadow"
+                    >
+                      {/* Imagen */}
+                      <div className="h-48 bg-muted flex items-center justify-center">
+                        {receta.imagen ? (
+                          <img
+                            src={receta.imagen}
+                            alt={receta.nombre}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center w-full h-full text-muted-foreground/50">
+                            <span className="text-6xl">🍽️</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          {receta.nombre}
+                        </CardTitle>
+                        {receta.descripcion && (
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {receta.descripcion}
+                          </p>
+                        )}
+                      </CardHeader>
+
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <span className="text-2xl font-bold text-primary">
+                            ${receta.precioVenta.toFixed(2)}
+                          </span>
+                          <Badge variant="secondary">
+                            {receta.ingredientes.length} ingredientes
+                          </Badge>
+                        </div>
+                      </CardContent>
+
+                      <CardFooter className="flex justify-end gap-2">
+                        <Button
+                          onClick={() => handleShowIngredientes(receta)}
+                          variant="ghost"
+                          size="sm"
+                          title="Ver ingredientes"
+                          className="h-8 w-8 p-0"
+                        >
+                          <List className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          onClick={() => handleEdit(receta)}
+                          variant="ghost"
+                          size="sm"
+                          title="Editar"
+                          className="h-8 w-8 p-0"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setRecetaToDelete(receta);
+                            setShowDeleteConfirm(true);
+                          }}
+                          variant="ghost"
+                          size="sm"
+                          title="Eliminar"
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )
+          );
+        })()
+      )}
 
       {/* Formulario de receta */}
       {showForm && (

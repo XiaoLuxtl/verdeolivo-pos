@@ -1,150 +1,68 @@
 // Ruta: app/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  ShoppingCart,
-  Plus,
-  Minus,
-  Trash2,
-  Settings,
-  CheckCircle,
-} from "lucide-react";
-import { CartItem } from "@/types/cart";
+import { useState } from "react";
+import { Settings, CheckCircle } from "lucide-react";
 import CheckoutModal from "@/components/CheckoutModal";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/ui/loading";
 import { Alert } from "@/components/ui/alert";
-
-type RecetaIngrediente = {
-  id: number;
-  recetaId: number;
-  productoId: number;
-  cantidad: number;
-  unidad: string;
-  producto: {
-    id: number;
-    nombre: string;
-    sku: string;
-  };
-};
-
-type Receta = {
-  id: number;
-  nombre: string;
-  precioVenta: number;
-  imagen: string | null;
-  ingredientes: RecetaIngrediente[];
-};
+import { useRecetas } from "@/hooks/useRecetas";
+import { useCategorias } from "@/hooks/useCategorias";
+import { useCart } from "@/hooks/useCart";
+import { useCheckout } from "@/hooks/useCheckout";
+import { CategoriasView } from "@/components/CategoriasView";
+import { ProductosView } from "@/components/ProductosView";
+import { CartSidebar } from "@/components/CartSidebar";
 
 export default function POSPage() {
-  const [recetas, setRecetas] = useState<Receta[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<
+    string | null
+  >(null);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  useEffect(() => {
-    fetchRecetas();
-  }, []);
+  // Hooks personalizados
+  const { recetas, loading, error } = useRecetas();
+  const { categoriasOrdenadas } = useCategorias(recetas);
+  const {
+    cart,
+    addToCart,
+    updateQuantity,
+    removeFromCart,
+    getTotal,
+    clearCart,
+  } = useCart();
+  const { handleCheckout } = useCheckout();
 
-  const fetchRecetas = async () => {
+  // Funciones de navegación
+  const seleccionarCategoria = (categoria: string) => {
+    setCategoriaSeleccionada(categoria);
+  };
+
+  const volverACategorias = () => {
+    setCategoriaSeleccionada(null);
+  };
+
+  // Handler para checkout
+  const onCheckout = async (recibido: number, descuentoData?: any) => {
     try {
-      const response = await fetch("/api/recetas");
-      const data = await response.json();
-      setRecetas(data);
-    } catch (error) {
-      console.error("Error al cargar recetas:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addToCart = (receta: Receta) => {
-    const existingItem = cart.find((item) => item.recetaId === receta.id);
-
-    if (existingItem) {
-      setCart(
-        cart.map((item) =>
-          item.recetaId === receta.id
-            ? { ...item, cantidad: item.cantidad + 1 }
-            : item
-        )
-      );
-    } else {
-      setCart([
-        ...cart,
-        {
-          recetaId: receta.id,
-          nombre: receta.nombre,
-          precio: receta.precioVenta,
-          cantidad: 1,
-          imagen: receta.imagen,
-        },
-      ]);
-    }
-  };
-
-  const updateQuantity = (recetaId: number, cantidad: number) => {
-    if (cantidad <= 0) {
-      removeFromCart(recetaId);
-      return;
-    }
-    setCart(
-      cart.map((item) =>
-        item.recetaId === recetaId ? { ...item, cantidad } : item
-      )
-    );
-  };
-
-  const removeFromCart = (recetaId: number) => {
-    setCart(cart.filter((item) => item.recetaId !== recetaId));
-  };
-
-  const getTotal = () => {
-    return cart.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
-  };
-
-  const handleCheckout = async (recibido: number) => {
-    const total = getTotal();
-    const cambio = recibido - total;
-
-    try {
-      const response = await fetch("/api/ventas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          total,
-          recibido,
-          cambio,
-          metodoPago: "efectivo",
-          detalles: cart.map((item) => ({
-            recetaId: item.recetaId,
-            recetaNombre: item.nombre,
-            cantidad: item.cantidad,
-            precioUnitario: item.precio,
-            subtotal: item.precio * item.cantidad,
-          })),
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error);
-      }
+      const result = await handleCheckout(cart, recibido, descuentoData);
 
       // Éxito
       setShowCheckout(false);
       setShowSuccess(true);
-      setCart([]);
+      clearCart();
 
       setTimeout(() => {
         setShowSuccess(false);
       }, 3000);
-    } catch (error: unknown) {
+
+      return result;
+    } catch (error) {
+      console.error("Error en checkout:", error);
       throw error;
     }
   };
@@ -153,6 +71,16 @@ export default function POSPage() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted">
         <Loading size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-muted">
+        <Alert className="max-w-md">
+          <span className="font-bold">Error al cargar datos:</span> {error}
+        </Alert>
       </div>
     );
   }
@@ -191,129 +119,34 @@ export default function POSPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {recetas.map((receta) => (
-              <Card
-                key={receta.id}
-                className="cursor-pointer transition-all hover:shadow-lg hover:scale-105 overflow-hidden"
-                onClick={() => addToCart(receta)}
-              >
-                <div className="aspect-square bg-muted flex items-center justify-center">
-                  {receta.imagen ? (
-                    <img
-                      src={receta.imagen}
-                      alt={receta.nombre}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full text-muted-foreground">
-                      <span className="text-5xl">🍽️</span>
-                    </div>
-                  )}
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-bold text-sm line-clamp-2 mb-2">
-                    {receta.nombre}
-                  </h3>
-                  <p className="text-lg font-bold text-primary">
-                    ${receta.precioVenta.toFixed(2)}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+          <div>
+            {categoriaSeleccionada ? (
+              <ProductosView
+                categoriaSeleccionada={categoriaSeleccionada}
+                categoriaData={categoriasOrdenadas.find(
+                  (c) => c.categoria === categoriaSeleccionada
+                )}
+                onVolver={volverACategorias}
+                onAgregarAlCarrito={addToCart}
+              />
+            ) : (
+              <CategoriasView
+                categoriasOrdenadas={categoriasOrdenadas}
+                onSeleccionarCategoria={seleccionarCategoria}
+              />
+            )}
           </div>
         )}
       </div>
 
       {/* Carrito lateral */}
-      <div className="w-full sm:w-96 bg-background shadow-2xl flex flex-col border-l">
-        <div className="p-6 border-b">
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold">Carrito</h2>
-            <Badge variant="default">{cart.length}</Badge>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 space-y-3">
-          {cart.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <ShoppingCart className="w-16 h-16 mx-auto mb-4 opacity-30" />
-              <p>Carrito vacío</p>
-              <p className="text-sm">Selecciona productos para agregar</p>
-            </div>
-          ) : (
-            cart.map((item) => (
-              <Card key={item.recetaId} className="bg-muted/50">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-sm flex-1">
-                      {item.nombre}
-                    </h3>
-                    <Button
-                      onClick={() => removeFromCart(item.recetaId)}
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        onClick={() =>
-                          updateQuantity(item.recetaId, item.cantidad - 1)
-                        }
-                        size="sm"
-                        variant="outline"
-                        className="h-8 w-8 p-0"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                      <span className="font-bold text-lg w-8 text-center">
-                        {item.cantidad}
-                      </span>
-                      <Button
-                        onClick={() =>
-                          updateQuantity(item.recetaId, item.cantidad + 1)
-                        }
-                        size="sm"
-                        variant="default"
-                        className="h-8 w-8 p-0"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <span className="font-bold text-lg">
-                      ${(item.precio * item.cantidad).toFixed(2)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-
-        {cart.length > 0 && (
-          <div className="p-6 border-t space-y-4">
-            <div className="flex justify-between items-center text-2xl font-bold">
-              <span>Total:</span>
-              <span className="text-primary">${getTotal().toFixed(2)}</span>
-            </div>
-            <Button
-              onClick={() => setShowCheckout(true)}
-              variant="default"
-              size="lg"
-              className="w-full"
-            >
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              Cobrar
-            </Button>
-          </div>
-        )}
-      </div>
+      <CartSidebar
+        cart={cart}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeFromCart}
+        onCheckout={() => setShowCheckout(true)}
+        total={getTotal()}
+      />
 
       {/* Modal de checkout */}
       {showCheckout && (
@@ -321,7 +154,7 @@ export default function POSPage() {
           cart={cart}
           total={getTotal()}
           onClose={() => setShowCheckout(false)}
-          onConfirm={handleCheckout}
+          onConfirm={onCheckout}
         />
       )}
 
