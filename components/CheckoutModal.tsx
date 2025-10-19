@@ -4,10 +4,10 @@
 import { useState } from "react";
 import { DollarSign } from "lucide-react";
 import { CartItem } from "@/types/cart";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Card, CardContent } from "./ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import {
   Dialog,
@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogFooter,
   DialogTitle,
-} from "./ui/dialog";
+} from "@/components/ui/dialog";
 
 type Props = {
   readonly cart: CartItem[];

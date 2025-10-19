@@ -2,25 +2,25 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogFooter,
   DialogTitle,
-} from "./ui/dialog";
-import { Loading } from "./ui/loading";
+} from "@/components/ui/dialog";
+import { Loading } from "@/components/ui/loading";
 
 type Producto = {
   readonly id: number;

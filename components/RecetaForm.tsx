@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogFooter,
   DialogTitle,
-} from "./ui/dialog";
+} from "@/components/ui/dialog";
 
 type Receta = {
   id?: number;

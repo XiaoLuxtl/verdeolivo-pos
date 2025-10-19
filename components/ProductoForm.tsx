@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
-import { Textarea } from "./ui/textarea";
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert } from "@/components/ui/alert";
 import {
   Dialog,
@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogFooter,
   DialogTitle,
-} from "./ui/dialog";
+} from "@/components/ui/dialog";
 
 export type Producto = {
   id?: number;
