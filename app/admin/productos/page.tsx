@@ -1,10 +1,28 @@
+// app/admin/productos/page.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
-import ProductoForm from "@/components/ProductoForm";
+import { Plus, Pencil, Trash2, Search, Package } from "lucide-react";
+import ProductoForm, {
+  type Producto as ProductoFormType,
+} from "@/components/ProductoForm"; // ← Importar el tipo
 import DeleteConfirmation from "@/components/DeleteConfirmation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
+import { Loading } from "@/components/ui/loading";
 
+// Tipo para los productos de la BD
 type Producto = {
   id: number;
   sku: string;
@@ -27,7 +45,8 @@ export default function ProductosPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [selectedProducto, setSelectedProducto] = useState<any>(null);
+  const [selectedProducto, setSelectedProducto] =
+    useState<ProductoFormType | null>(null); // ← Usar el tipo importado
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [productoToDelete, setProductoToDelete] = useState<Producto | null>(
     null
@@ -98,115 +117,143 @@ export default function ProductosPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
+        <Loading size="lg" />
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-base-content">Productos</h1>
-        <button onClick={() => setShowForm(true)} className="btn btn-primary">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Package className="w-8 h-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Productos</h1>
+            <p className="text-muted-foreground">
+              Gestiona tu inventario de productos
+            </p>
+          </div>
+        </div>
+        <Button onClick={() => setShowForm(true)} variant="default">
           <Plus className="w-5 h-5 mr-2" />
           Nuevo Producto
-        </button>
+        </Button>
       </div>
 
       {/* Buscador */}
-      <div className="card bg-base-100 shadow-lg mb-6">
-        <div className="card-body">
-          <div className="form-control">
-            <div className="input-group">
-              <span className="bg-base-200">
-                <Search className="w-5 h-5" />
-              </span>
-              <input
-                type="text"
-                placeholder="Buscar por nombre, SKU o sabor..."
-                className="input input-bordered w-full"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Buscar por nombre, SKU o sabor..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Tabla de productos */}
-      <div className="card bg-base-100 shadow-lg">
-        <div className="card-body p-0">
+      <Card>
+        <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="table table-zebra">
-              <thead>
-                <tr>
-                  <th>SKU</th>
-                  <th>Nombre</th>
-                  <th>Sabor</th>
-                  <th>Precio</th>
-                  <th>Stock</th>
-                  <th>Unidad</th>
-                  <th>Proveedor</th>
-                  <th className="text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>SKU</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Sabor</TableHead>
+                  <TableHead>Precio</TableHead>
+                  <TableHead>Peso/Cantidad</TableHead>
+                  <TableHead>Unidad</TableHead>
+                  <TableHead>Proveedor</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredProductos.length === 0 ? (
-                  <tr>
-                    <td
+                  <TableRow>
+                    <TableCell
                       colSpan={8}
-                      className="text-center py-8 text-base-content/50"
+                      className="text-center py-8 text-muted-foreground"
                     >
                       No hay productos registrados
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   filteredProductos.map((producto) => (
-                    <tr key={producto.id}>
-                      <td className="font-mono">{producto.sku}</td>
-                      <td className="font-semibold">{producto.nombre}</td>
-                      <td>{producto.sabor || "-"}</td>
-                      <td>${producto.precioUnitario.toFixed(2)}</td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            (producto.inventario?.cantidadActual || 0) > 0
-                              ? "badge-success"
-                              : "badge-error"
-                          }`}
-                        >
-                          {producto.inventario?.cantidadActual || 0}
-                        </span>
-                      </td>
-                      <td>{producto.unidad}</td>
-                      <td>{producto.proveedor || "-"}</td>
-                      <td>
+                    <TableRow key={producto.id}>
+                      <TableCell className="font-mono">
+                        {producto.sku}
+                      </TableCell>
+                      <TableCell className="font-semibold">
+                        {producto.nombre}
+                      </TableCell>
+                      <TableCell>{producto.sabor || "-"}</TableCell>
+                      <TableCell>
+                        ${producto.precioUnitario.toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="text-sm">
+                            {producto.peso ? (
+                              <span className="font-medium">
+                                {producto.peso} {producto.unidad}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">
+                                Sin peso
+                              </span>
+                            )}
+                          </div>
+                          {/* <Badge
+                            variant={
+                              (producto.inventario?.cantidadActual || 0) > 0
+                                ? "default"
+                                : "destructive"
+                            }
+                            className="text-xs"
+                          >
+                            Stock: {producto.inventario?.cantidadActual || 0}
+                          </Badge> */}
+                        </div>
+                      </TableCell>
+                      <TableCell>{producto.unidad}</TableCell>
+                      <TableCell>{producto.proveedor || "-"}</TableCell>
+                      <TableCell>
                         <div className="flex gap-2 justify-end">
-                          <button
+                          <Button
                             onClick={() => handleEdit(producto)}
-                            className="btn btn-ghost btn-sm"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
                           >
                             <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             onClick={() => {
                               setProductoToDelete(producto);
                               setShowDeleteConfirm(true);
                             }}
-                            className="btn btn-ghost btn-sm text-error"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
+                          </Button>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Formulario */}
       {showForm && (

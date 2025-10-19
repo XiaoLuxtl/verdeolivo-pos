@@ -1,9 +1,27 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Textarea } from "./ui/textarea";
+import { Alert } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from "./ui/dialog";
 
-type Producto = {
+export type Producto = {
   id?: number;
   sku: string;
   nombre: string;
@@ -16,9 +34,9 @@ type Producto = {
 };
 
 type Props = {
-  producto?: Producto;
-  onClose: () => void;
-  onSave: () => void;
+  readonly producto?: Producto | null;
+  readonly onClose: () => void;
+  readonly onSave: () => void;
 };
 
 const unidadesDisponibles = ["gr", "ml", "pz", "kg", "lt"];
@@ -68,189 +86,180 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
 
       onSave();
       onClose();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
       setLoading(false);
     }
   };
 
+  const submitButtonText = producto?.id ? "Actualizar" : "Crear";
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-base-100 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-base-300">
-          <h2 className="text-2xl font-bold text-base-content">
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>
             {producto?.id ? "Editar Producto" : "Nuevo Producto"}
-          </h2>
-          <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle">
-            <X className="w-5 h-5" />
-          </button>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <Alert variant="error">
+                <span>{error}</span>
+              </Alert>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* SKU */}
+              <div className="space-y-2">
+                <Label htmlFor="sku">SKU *</Label>
+                <Input
+                  id="sku"
+                  type="text"
+                  required
+                  value={formData.sku}
+                  onChange={(e) =>
+                    setFormData({ ...formData, sku: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Nombre */}
+              <div className="space-y-2">
+                <Label htmlFor="nombre">Nombre *</Label>
+                <Input
+                  id="nombre"
+                  type="text"
+                  required
+                  value={formData.nombre}
+                  onChange={(e) =>
+                    setFormData({ ...formData, nombre: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Sabor */}
+              <div className="space-y-2">
+                <Label htmlFor="sabor">Sabor</Label>
+                <Input
+                  id="sabor"
+                  type="text"
+                  value={formData.sabor}
+                  onChange={(e) =>
+                    setFormData({ ...formData, sabor: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Proveedor */}
+              <div className="space-y-2">
+                <Label htmlFor="proveedor">Proveedor</Label>
+                <Input
+                  id="proveedor"
+                  type="text"
+                  value={formData.proveedor}
+                  onChange={(e) =>
+                    setFormData({ ...formData, proveedor: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Precio Unitario */}
+              <div className="space-y-2">
+                <Label htmlFor="precioUnitario">Precio Unitario *</Label>
+                <Input
+                  id="precioUnitario"
+                  type="number"
+                  step="0.01"
+                  required
+                  value={formData.precioUnitario}
+                  onChange={(e) =>
+                    setFormData({ ...formData, precioUnitario: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Peso */}
+              <div className="space-y-2">
+                <Label htmlFor="peso">Peso/Cantidad</Label>
+                <Input
+                  id="peso"
+                  type="number"
+                  step="0.01"
+                  value={formData.peso}
+                  onChange={(e) =>
+                    setFormData({ ...formData, peso: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Unidad */}
+              <div className="space-y-2">
+                <Label htmlFor="unidad">Unidad *</Label>
+                <Select
+                  value={formData.unidad}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, unidad: value })
+                  }
+                >
+                  <SelectTrigger id="unidad">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {unidadesDisponibles.map((unidad) => (
+                      <SelectItem key={unidad} value={unidad}>
+                        {unidad}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Descripción */}
+            <div className="space-y-2">
+              <Label htmlFor="descripcion">Descripción</Label>
+              <Textarea
+                id="descripcion"
+                value={formData.descripcion}
+                onChange={(e) =>
+                  setFormData({ ...formData, descripcion: e.target.value })
+                }
+                rows={3}
+              />
+            </div>
+          </form>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="alert alert-error">
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* SKU */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">SKU *</span>
-              </label>
-              <input
-                type="text"
-                required
-                className="input input-bordered"
-                value={formData.sku}
-                onChange={(e) =>
-                  setFormData({ ...formData, sku: e.target.value })
-                }
-              />
-            </div>
-
-            {/* Nombre */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Nombre *</span>
-              </label>
-              <input
-                type="text"
-                required
-                className="input input-bordered"
-                value={formData.nombre}
-                onChange={(e) =>
-                  setFormData({ ...formData, nombre: e.target.value })
-                }
-              />
-            </div>
-
-            {/* Sabor */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Sabor</span>
-              </label>
-              <input
-                type="text"
-                className="input input-bordered"
-                value={formData.sabor}
-                onChange={(e) =>
-                  setFormData({ ...formData, sabor: e.target.value })
-                }
-              />
-            </div>
-
-            {/* Proveedor */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Proveedor</span>
-              </label>
-              <input
-                type="text"
-                className="input input-bordered"
-                value={formData.proveedor}
-                onChange={(e) =>
-                  setFormData({ ...formData, proveedor: e.target.value })
-                }
-              />
-            </div>
-
-            {/* Precio Unitario */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Precio Unitario *</span>
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                required
-                className="input input-bordered"
-                value={formData.precioUnitario}
-                onChange={(e) =>
-                  setFormData({ ...formData, precioUnitario: e.target.value })
-                }
-              />
-            </div>
-
-            {/* Peso */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Peso/Cantidad</span>
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                className="input input-bordered"
-                value={formData.peso}
-                onChange={(e) =>
-                  setFormData({ ...formData, peso: e.target.value })
-                }
-              />
-            </div>
-
-            {/* Unidad */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Unidad *</span>
-              </label>
-              <select
-                required
-                className="select select-bordered"
-                value={formData.unidad}
-                onChange={(e) =>
-                  setFormData({ ...formData, unidad: e.target.value })
-                }
-              >
-                {unidadesDisponibles.map((unidad) => (
-                  <option key={unidad} value={unidad}>
-                    {unidad}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Descripción */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Descripción</span>
-            </label>
-            <textarea
-              className="textarea textarea-bordered h-24"
-              value={formData.descripcion}
-              onChange={(e) =>
-                setFormData({ ...formData, descripcion: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="flex gap-3 justify-end pt-4">
-            <button
-              type="button"
+        <DialogFooter>
+          <div className="flex gap-3 w-full">
+            <Button
               onClick={onClose}
-              className="btn btn-ghost"
+              variant="outline"
+              className="flex-1"
               disabled={loading}
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="btn btn-primary"
+              variant="default"
+              className="flex-1"
               disabled={loading}
+              onClick={handleSubmit}
             >
               {loading ? (
                 <span className="loading loading-spinner"></span>
-              ) : producto?.id ? (
-                "Actualizar"
               ) : (
-                "Crear"
+                submitButtonText
               )}
-            </button>
+            </Button>
           </div>
-        </form>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

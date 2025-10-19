@@ -13,13 +13,31 @@ import {
 import { CartItem } from "@/types/cart";
 import CheckoutModal from "@/components/CheckoutModal";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Loading } from "@/components/ui/loading";
+import { Alert } from "@/components/ui/alert";
+
+type RecetaIngrediente = {
+  id: number;
+  recetaId: number;
+  productoId: number;
+  cantidad: number;
+  unidad: string;
+  producto: {
+    id: number;
+    nombre: string;
+    sku: string;
+  };
+};
 
 type Receta = {
   id: number;
   nombre: string;
   precioVenta: number;
   imagen: string | null;
-  ingredientes: any[];
+  ingredientes: RecetaIngrediente[];
 };
 
 export default function POSPage() {
@@ -126,57 +144,61 @@ export default function POSPage() {
       setTimeout(() => {
         setShowSuccess(false);
       }, 3000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw error;
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-base-200">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
+      <div className="flex items-center justify-center min-h-screen bg-muted">
+        <Loading size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-base-200 flex">
+    <div className="min-h-screen bg-muted flex flex-col lg:flex-row">
       {/* Área de productos */}
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-4xl font-bold text-base-content">
+          <h1 className="text-4xl font-bold text-foreground">
             Punto de Venta — Verde Olivo
           </h1>
-          <Link href="/admin" className="btn btn-ghost">
-            <Settings className="w-5 h-5 mr-2" />
-            Admin
+          <Link href="/admin">
+            <Button variant="ghost">
+              <Settings className="w-5 h-5 mr-2" />
+              Admin
+            </Button>
           </Link>
         </div>
 
         {recetas.length === 0 ? (
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body items-center text-center py-20">
-              <h2 className="card-title text-2xl mb-4">
+          <Card className="flex flex-col items-center justify-center py-20">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">
                 No hay recetas disponibles
-              </h2>
-              <p className="text-base-content/70 mb-4">
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-muted-foreground mb-4">
                 Crea recetas desde el panel de administración para comenzar a
                 vender.
               </p>
-              <Link href="/admin/recetas" className="btn btn-primary">
-                Ir a Recetas
+              <Link href="/admin/recetas">
+                <Button variant="default">Ir a Recetas</Button>
               </Link>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {recetas.map((receta) => (
-              <button
+              <Card
                 key={receta.id}
+                className="cursor-pointer transition-all hover:shadow-lg hover:scale-105 overflow-hidden"
                 onClick={() => addToCart(receta)}
-                className="card bg-base-100 shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
               >
-                <figure className="h-32 bg-base-200">
+                <div className="aspect-square bg-muted flex items-center justify-center">
                   {receta.imagen ? (
                     <img
                       src={receta.imagen}
@@ -184,103 +206,111 @@ export default function POSPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="flex items-center justify-center w-full h-full text-base-content/30">
+                    <div className="flex items-center justify-center w-full h-full text-muted-foreground">
                       <span className="text-5xl">🍽️</span>
                     </div>
                   )}
-                </figure>
-                <div className="card-body p-4">
-                  <h3 className="font-bold text-sm line-clamp-2">
+                </div>
+                <CardContent className="p-4">
+                  <h3 className="font-bold text-sm line-clamp-2 mb-2">
                     {receta.nombre}
                   </h3>
                   <p className="text-lg font-bold text-primary">
                     ${receta.precioVenta.toFixed(2)}
                   </p>
-                </div>
-              </button>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
       </div>
 
       {/* Carrito lateral */}
-      <div className="w-96 bg-base-100 shadow-2xl flex flex-col">
-        <div className="p-6 border-b border-base-300">
+      <div className="w-full sm:w-96 bg-background shadow-2xl flex flex-col border-l">
+        <div className="p-6 border-b">
           <div className="flex items-center gap-2">
             <ShoppingCart className="w-6 h-6 text-primary" />
             <h2 className="text-2xl font-bold">Carrito</h2>
-            <span className="badge badge-primary">{cart.length}</span>
+            <Badge variant="default">{cart.length}</Badge>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-3">
           {cart.length === 0 ? (
-            <div className="text-center py-12 text-base-content/50">
+            <div className="text-center py-12 text-muted-foreground">
               <ShoppingCart className="w-16 h-16 mx-auto mb-4 opacity-30" />
               <p>Carrito vacío</p>
               <p className="text-sm">Selecciona productos para agregar</p>
             </div>
           ) : (
             cart.map((item) => (
-              <div key={item.recetaId} className="card bg-base-200">
-                <div className="card-body p-4">
+              <Card key={item.recetaId} className="bg-muted/50">
+                <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-sm flex-1">
                       {item.nombre}
                     </h3>
-                    <button
+                    <Button
                       onClick={() => removeFromCart(item.recetaId)}
-                      className="btn btn-ghost btn-xs btn-circle"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
                     >
-                      <Trash2 className="w-4 h-4 text-error" />
-                    </button>
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <button
+                      <Button
                         onClick={() =>
                           updateQuantity(item.recetaId, item.cantidad - 1)
                         }
-                        className="btn btn-sm btn-circle"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-8 p-0"
                       >
                         <Minus className="w-4 h-4" />
-                      </button>
+                      </Button>
                       <span className="font-bold text-lg w-8 text-center">
                         {item.cantidad}
                       </span>
-                      <button
+                      <Button
                         onClick={() =>
                           updateQuantity(item.recetaId, item.cantidad + 1)
                         }
-                        className="btn btn-sm btn-circle btn-primary"
+                        size="sm"
+                        variant="default"
+                        className="h-8 w-8 p-0"
                       >
                         <Plus className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </div>
                     <span className="font-bold text-lg">
                       ${(item.precio * item.cantidad).toFixed(2)}
                     </span>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))
           )}
         </div>
 
         {cart.length > 0 && (
-          <div className="p-6 border-t border-base-300 space-y-4">
+          <div className="p-6 border-t space-y-4">
             <div className="flex justify-between items-center text-2xl font-bold">
               <span>Total:</span>
               <span className="text-primary">${getTotal().toFixed(2)}</span>
             </div>
-            <button
+            <Button
               onClick={() => setShowCheckout(true)}
-              className="btn btn-primary btn-lg w-full"
+              variant="default"
+              size="lg"
+              className="w-full"
             >
               <ShoppingCart className="w-5 h-5 mr-2" />
               Cobrar
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -297,11 +327,11 @@ export default function POSPage() {
 
       {/* Toast de éxito */}
       {showSuccess && (
-        <div className="toast toast-top toast-center z-50">
-          <div className="alert alert-success">
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+          <Alert className="border-green-200 bg-green-50 text-green-800">
             <CheckCircle className="w-6 h-6" />
             <span className="font-bold">¡Venta realizada con éxito!</span>
-          </div>
+          </Alert>
         </div>
       )}
     </div>

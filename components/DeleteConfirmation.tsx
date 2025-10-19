@@ -2,13 +2,23 @@
 
 import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Alert } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from "./ui/dialog";
 
 type Props = {
-  title: string;
-  message: string;
-  confirmText?: string;
-  onConfirm: () => Promise<void>;
-  onCancel: () => void;
+  readonly title: string;
+  readonly message: string;
+  readonly confirmText?: string;
+  readonly onConfirm: () => Promise<void>;
+  readonly onCancel: () => void;
 };
 
 export default function DeleteConfirmation({
@@ -31,59 +41,66 @@ export default function DeleteConfirmation({
     try {
       await onConfirm();
       onCancel();
-    } catch (err: any) {
-      setError(err.message || "Error al eliminar");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al eliminar");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-base-100 rounded-lg shadow-xl max-w-md w-full">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="bg-error/10 p-3 rounded-full">
-              <AlertTriangle className="w-6 h-6 text-error" />
+    <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-destructive/10 p-3 rounded-full">
+              <AlertTriangle className="w-6 h-6 text-destructive" />
             </div>
-            <h3 className="text-xl font-bold text-base-content">{title}</h3>
+            <div>
+              <h3 className="text-lg font-semibold">{title}</h3>
+            </div>
           </div>
 
-          <p className="text-base-content/70 mb-4">{message}</p>
+          <p className="text-muted-foreground">{message}</p>
 
           {error && (
-            <div className="alert alert-error mb-4">
+            <Alert variant="error">
               <span>{error}</span>
-            </div>
+            </Alert>
           )}
 
-          <div className="form-control mb-6">
-            <label className="label">
-              <span className="label-text">
-                Escribe <strong>{confirmText}</strong> para confirmar
-              </span>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Escribe <strong>{confirmText}</strong> para confirmar
             </label>
-            <input
+            <Input
               type="text"
-              className="input input-bordered"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={confirmText}
               disabled={loading}
             />
           </div>
+        </div>
 
-          <div className="flex gap-3 justify-end">
-            <button
+        <DialogFooter>
+          <div className="flex gap-3 w-full">
+            <Button
               onClick={onCancel}
-              className="btn btn-ghost"
+              variant="outline"
+              className="flex-1"
               disabled={loading}
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleConfirm}
-              className="btn btn-error"
+              variant="destructive"
+              className="flex-1"
               disabled={inputValue !== confirmText || loading}
             >
               {loading ? (
@@ -91,10 +108,10 @@ export default function DeleteConfirmation({
               ) : (
                 "Eliminar"
               )}
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

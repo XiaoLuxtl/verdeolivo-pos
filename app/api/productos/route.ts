@@ -50,11 +50,21 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(producto);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error al crear producto:", error);
-    if (error.code === "P2002") {
-      return NextResponse.json({ error: "El SKU ya existe" }, { status: 400 });
+
+    // Verificar si es un error de Prisma con código P2002
+    if (error instanceof Error && "code" in error) {
+      const prismaError = error as { code?: string };
+
+      if (prismaError.code === "P2002") {
+        return NextResponse.json(
+          { error: "El SKU ya existe" },
+          { status: 400 }
+        );
+      }
     }
+
     return NextResponse.json(
       { error: "Error al crear producto" },
       { status: 500 }

@@ -1,8 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
 import ImageUpload from "./ImageUpload";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from "./ui/dialog";
 
 type Receta = {
   id?: number;
@@ -13,9 +23,9 @@ type Receta = {
 };
 
 type Props = {
-  receta?: Receta;
-  onClose: () => void;
-  onSave: () => void;
+  readonly receta?: Receta;
+  readonly onClose: () => void;
+  readonly onSave: () => void;
 };
 
 export default function RecetaForm({ receta, onClose, onSave }: Props) {
@@ -57,120 +67,118 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
 
       onSave();
       onClose();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
       setLoading(false);
     }
   };
 
+  const submitButtonText = receta?.id ? "Actualizar" : "Crear Receta";
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-base-100 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-base-300">
-          <h2 className="text-2xl font-bold text-base-content">
-            {receta?.id ? "Editar Receta" : "Nueva Receta"}
-          </h2>
-          <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle">
-            <X className="w-5 h-5" />
-          </button>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">
+            {receta ? "Editar Receta" : "Nueva Receta"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="alert alert-error">
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Imagen */}
+            <ImageUpload
+              value={formData.imagen}
+              onChange={(imagen) => setFormData({ ...formData, imagen })}
+            />
+
+            {/* Nombre */}
+            <div className="space-y-2">
+              <Label htmlFor="nombre">Nombre de la Receta *</Label>
+              <Input
+                id="nombre"
+                type="text"
+                required
+                value={formData.nombre}
+                onChange={(e) =>
+                  setFormData({ ...formData, nombre: e.target.value })
+                }
+                placeholder="Ej. Malteada de Uva"
+              />
+            </div>
+
+            {/* Precio de Venta */}
+            <div className="space-y-2">
+              <Label htmlFor="precioVenta">Precio de Venta *</Label>
+              <Input
+                id="precioVenta"
+                type="number"
+                step="0.01"
+                required
+                value={formData.precioVenta}
+                onChange={(e) =>
+                  setFormData({ ...formData, precioVenta: e.target.value })
+                }
+                placeholder="0.00"
+              />
+            </div>
+
+            {/* Descripción */}
+            <div className="space-y-2">
+              <Label htmlFor="descripcion">Descripción</Label>
+              <Textarea
+                id="descripcion"
+                value={formData.descripcion}
+                onChange={(e) =>
+                  setFormData({ ...formData, descripcion: e.target.value })
+                }
+                placeholder="Descripción opcional de la receta..."
+                rows={3}
+              />
+            </div>
+
+            <div className="alert alert-info">
+              <span className="text-sm">
+                💡 Después de crear la receta podrás agregar los ingredientes
+                necesarios
+              </span>
+            </div>
+          </form>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="alert alert-error">
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Imagen */}
-          <ImageUpload
-            value={formData.imagen}
-            onChange={(imagen) => setFormData({ ...formData, imagen })}
-          />
-
-          {/* Nombre */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Nombre de la Receta *</span>
-            </label>
-            <input
-              type="text"
-              required
-              className="input input-bordered"
-              value={formData.nombre}
-              onChange={(e) =>
-                setFormData({ ...formData, nombre: e.target.value })
-              }
-              placeholder="Ej. Malteada de Uva"
-            />
-          </div>
-
-          {/* Precio de Venta */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Precio de Venta *</span>
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              required
-              className="input input-bordered"
-              value={formData.precioVenta}
-              onChange={(e) =>
-                setFormData({ ...formData, precioVenta: e.target.value })
-              }
-              placeholder="0.00"
-            />
-          </div>
-
-          {/* Descripción */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Descripción</span>
-            </label>
-            <textarea
-              className="textarea textarea-bordered h-24"
-              value={formData.descripcion}
-              onChange={(e) =>
-                setFormData({ ...formData, descripcion: e.target.value })
-              }
-              placeholder="Descripción opcional de la receta..."
-            />
-          </div>
-
-          <div className="alert alert-info">
-            <span className="text-sm">
-              💡 Después de crear la receta podrás agregar los ingredientes
-              necesarios
-            </span>
-          </div>
-
-          <div className="flex gap-3 justify-end pt-4">
-            <button
-              type="button"
+        <DialogFooter>
+          <div className="flex gap-3 w-full">
+            <Button
               onClick={onClose}
-              className="btn btn-ghost"
+              variant="outline"
+              className="flex-1"
               disabled={loading}
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="btn btn-primary"
+              variant="default"
+              className="flex-1"
               disabled={loading}
+              onClick={handleSubmit}
             >
               {loading ? (
                 <span className="loading loading-spinner"></span>
-              ) : receta?.id ? (
-                "Actualizar"
               ) : (
-                "Crear Receta"
+                submitButtonText
               )}
-            </button>
+            </Button>
           </div>
-        </form>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

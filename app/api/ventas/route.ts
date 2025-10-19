@@ -122,11 +122,12 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(venta);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error al crear venta:", error);
-    return NextResponse.json(
-      { error: error.message || "Error al crear venta" },
-      { status: 500 }
-    );
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Error al crear venta";
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

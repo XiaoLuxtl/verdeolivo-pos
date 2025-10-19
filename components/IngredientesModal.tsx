@@ -1,25 +1,44 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Plus, Trash2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from "./ui/dialog";
+import { Loading } from "./ui/loading";
 
 type Producto = {
-  id: number;
-  nombre: string;
-  unidad: string;
+  readonly id: number;
+  readonly nombre: string;
+  readonly unidad: string;
 };
 
 type Ingrediente = {
-  id: number;
-  cantidad: number;
-  unidad: string;
-  producto: Producto;
+  readonly id: number;
+  readonly cantidad: number;
+  readonly unidad: string;
+  readonly producto: Producto;
 };
 
 type Props = {
-  recetaId: number;
-  recetaNombre: string;
-  onClose: () => void;
+  readonly recetaId: number;
+  readonly recetaNombre: string;
+  readonly onClose: () => void;
 };
 
 export default function IngredientesModal({
@@ -37,11 +56,7 @@ export default function IngredientesModal({
     unidad: "gr",
   });
 
-  useEffect(() => {
-    fetchData();
-  }, [recetaId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [ingredientesRes, productosRes] = await Promise.all([
         fetch(`/api/recetas/${recetaId}/ingredientes`),
@@ -58,7 +73,11 @@ export default function IngredientesModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [recetaId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleAddIngrediente = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,150 +120,163 @@ export default function IngredientesModal({
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-base-100 p-8 rounded-lg">
-          <span className="loading loading-spinner loading-lg"></span>
-        </div>
-      </div>
+      <Dialog open={true} onOpenChange={() => {}}>
+        <DialogContent>
+          <div className="flex items-center justify-center p-8">
+            <Loading size="lg" />
+          </div>
+        </DialogContent>
+      </Dialog>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-base-100 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-base-300">
-          <div>
-            <h2 className="text-2xl font-bold text-base-content">
-              Ingredientes
-            </h2>
-            <p className="text-sm text-base-content/60 mt-1">{recetaNombre}</p>
-          </div>
-          <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">Ingredientes</DialogTitle>
+          <p className="text-sm text-muted-foreground mt-1">{recetaNombre}</p>
+        </DialogHeader>
 
-        <div className="p-6">
+        <div className="space-y-4">
           {/* Botón agregar */}
           {!showForm && (
-            <button
+            <Button
+              type="button"
               onClick={() => setShowForm(true)}
-              className="btn btn-primary btn-sm mb-4"
+              variant="outline"
+              size="sm"
             >
               <Plus className="w-4 h-4 mr-2" />
               Agregar Ingrediente
-            </button>
+            </Button>
           )}
 
           {/* Formulario */}
           {showForm && (
-            <form
-              onSubmit={handleAddIngrediente}
-              className="card bg-base-200 p-4 mb-4"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="form-control">
-                  <label className="label label-text">Producto</label>
-                  <select
-                    required
-                    className="select select-bordered select-sm"
-                    value={formData.productoId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, productoId: e.target.value })
-                    }
-                  >
-                    <option value="">Seleccionar...</option>
-                    {productos.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <Card className="mb-4">
+              <CardHeader>
+                <CardTitle className="text-lg">Nuevo Ingrediente</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddIngrediente}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="producto">Producto</Label>
+                      <Select
+                        value={formData.productoId}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, productoId: value })
+                        }
+                      >
+                        <SelectTrigger id="producto">
+                          <SelectValue placeholder="Seleccionar..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {productos.map((p) => (
+                            <SelectItem key={p.id} value={p.id.toString()}>
+                              {p.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="form-control">
-                  <label className="label label-text">Cantidad</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    className="input input-bordered input-sm"
-                    value={formData.cantidad}
-                    onChange={(e) =>
-                      setFormData({ ...formData, cantidad: e.target.value })
-                    }
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cantidad">Cantidad</Label>
+                      <Input
+                        id="cantidad"
+                        type="number"
+                        step="0.01"
+                        required
+                        value={formData.cantidad}
+                        onChange={(e) =>
+                          setFormData({ ...formData, cantidad: e.target.value })
+                        }
+                      />
+                    </div>
 
-                <div className="form-control">
-                  <label className="label label-text">Unidad</label>
-                  <select
-                    className="select select-bordered select-sm"
-                    value={formData.unidad}
-                    onChange={(e) =>
-                      setFormData({ ...formData, unidad: e.target.value })
-                    }
-                  >
-                    <option value="gr">gr</option>
-                    <option value="ml">ml</option>
-                    <option value="pz">pz</option>
-                    <option value="kg">kg</option>
-                    <option value="lt">lt</option>
-                  </select>
-                </div>
-              </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="unidad">Unidad</Label>
+                      <Select
+                        value={formData.unidad}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, unidad: value })
+                        }
+                      >
+                        <SelectTrigger id="unidad">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="gr">gr</SelectItem>
+                          <SelectItem value="ml">ml</SelectItem>
+                          <SelectItem value="pz">pz</SelectItem>
+                          <SelectItem value="kg">kg</SelectItem>
+                          <SelectItem value="lt">lt</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
-              <div className="flex gap-2 mt-3">
-                <button type="submit" className="btn btn-primary btn-sm">
-                  Agregar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="btn btn-ghost btn-sm"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
+                  <div className="flex gap-2 mt-3">
+                    <Button type="submit" variant="default" size="sm">
+                      Agregar
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setShowForm(false)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
           )}
 
           {/* Lista de ingredientes */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             {ingredientes.length === 0 ? (
-              <div className="text-center py-8 text-base-content/50">
-                No hay ingredientes agregados
-              </div>
+              <Card>
+                <CardContent className="flex items-center justify-center py-8">
+                  <p className="text-muted-foreground">
+                    No hay ingredientes agregados
+                  </p>
+                </CardContent>
+              </Card>
             ) : (
               ingredientes.map((ing) => (
-                <div
-                  key={ing.id}
-                  className="flex items-center justify-between p-4 bg-base-200 rounded-lg"
-                >
-                  <div>
-                    <p className="font-semibold">{ing.producto.nombre}</p>
-                    <p className="text-sm text-base-content/60">
-                      {ing.cantidad} {ing.unidad}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteIngrediente(ing.id)}
-                    className="btn btn-ghost btn-sm text-error"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                <Card key={ing.id}>
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div>
+                      <p className="font-semibold">{ing.producto.nombre}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {ing.cantidad} {ing.unidad}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={() => handleDeleteIngrediente(ing.id)}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </CardContent>
+                </Card>
               ))
             )}
           </div>
         </div>
 
-        <div className="p-6 border-t border-base-300">
-          <button onClick={onClose} className="btn btn-primary w-full">
+        <DialogFooter>
+          <Button onClick={onClose} variant="default" className="w-full">
             Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

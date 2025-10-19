@@ -6,7 +6,7 @@ import Sidebar from "@/components/Sidebar";
 export default function AdminLayout({
   children,
 }: {
-  children: React.ReactNode;
+  readonly children: React.ReactNode;
 }) {
   const [sidebarWidth, setSidebarWidth] = useState(256); // 64 * 4 = w-64
 
@@ -35,7 +35,7 @@ export default function AdminLayout({
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-base-200">
+    <div className="flex min-h-screen bg-muted/20">
       <Sidebar />
       <main
         className="flex-1 transition-all duration-300 ease-in-out"

@@ -4,13 +4,27 @@
 import { useState, useEffect } from "react";
 import {
   Plus,
-  AlertTriangle,
   Package,
   TrendingDown,
   TrendingUp,
   Edit3,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import MovimientoForm from "@/components/MovimientoForm";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { Loading } from "@/components/ui/loading";
 
 type Producto = {
   id: number;
@@ -43,6 +57,7 @@ export default function InventarioPage() {
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [movimientosOpen, setMovimientosOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState<
     { id: number; nombre: string } | undefined
   >();
@@ -86,10 +101,10 @@ export default function InventarioPage() {
     }
   };
 
-  const getBadgeClass = (cantidad: number) => {
-    if (cantidad === 0) return "badge-error";
-    if (cantidad < 100) return "badge-warning";
-    return "badge-success";
+  const getBadgeVariant = (cantidad: number) => {
+    if (cantidad === 0) return "destructive";
+    if (cantidad < 100) return "warning";
+    return "success";
   };
 
   const formatFecha = (fecha: string) => {
@@ -104,29 +119,29 @@ export default function InventarioPage() {
 
   const getCategoriaIcon = (tipo: string, categoria: string) => {
     if (tipo === "entrada")
-      return <TrendingUp className="w-4 h-4 text-success" />;
-    return <TrendingDown className="w-4 h-4 text-error" />;
+      return <TrendingUp className="w-4 h-4 text-green-600" />;
+    return <TrendingDown className="w-4 h-4 text-red-600" />;
   };
 
-  const getCategoriaColor = (categoria: string) => {
+  const getCategoriaBadgeVariant = (categoria: string) => {
     switch (categoria) {
       case "insumo":
-        return "badge-success";
+        return "success";
       case "venta":
-        return "badge-primary";
+        return "default";
       case "merma":
-        return "badge-error";
+        return "destructive";
       case "ajuste":
-        return "badge-warning";
+        return "warning";
       default:
-        return "badge-ghost";
+        return "secondary";
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
+        <Loading size="lg" />
       </div>
     );
   }
@@ -136,45 +151,45 @@ export default function InventarioPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-base-content">Inventario</h1>
-        <button
+        <h1 className="text-3xl font-bold text-foreground">Inventario</h1>
+        <Button
           onClick={() => {
             setSelectedProducto(undefined);
             setShowForm(true);
           }}
-          className="btn btn-primary"
+          variant="default"
         >
           <Plus className="w-5 h-5 mr-2" />
           Registrar Movimiento
-        </button>
+        </Button>
       </div>
 
       {/* Estadísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <h3 className="text-sm text-base-content/60">Total Productos</h3>
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <h3 className="text-sm text-muted-foreground">Total Productos</h3>
             <p className="text-3xl font-bold text-primary">
               {productos.length}
             </p>
-          </div>
-        </div>
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <h3 className="text-sm text-base-content/60">Sin Stock</h3>
-            <p className="text-3xl font-bold text-error">
+          </CardContent>
+        </Card>
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <h3 className="text-sm text-muted-foreground">Sin Stock</h3>
+            <p className="text-3xl font-bold text-red-600">
               {
                 productos.filter(
                   (p) => (p.inventario?.cantidadActual || 0) === 0
                 ).length
               }
             </p>
-          </div>
-        </div>
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <h3 className="text-sm text-base-content/60">Stock Bajo</h3>
-            <p className="text-3xl font-bold text-warning">
+          </CardContent>
+        </Card>
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <h3 className="text-sm text-muted-foreground">Stock Bajo</h3>
+            <p className="text-3xl font-bold text-yellow-600">
               {
                 productos.filter((p) => {
                   const stock = p.inventario?.cantidadActual || 0;
@@ -182,180 +197,229 @@ export default function InventarioPage() {
                 }).length
               }
             </p>
-          </div>
-        </div>
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <h3 className="text-sm text-base-content/60">Con Stock</h3>
-            <p className="text-3xl font-bold text-success">
+          </CardContent>
+        </Card>
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <h3 className="text-sm text-muted-foreground">Con Stock</h3>
+            <p className="text-3xl font-bold text-green-600">
               {
                 productos.filter(
                   (p) => (p.inventario?.cantidadActual || 0) >= 100
                 ).length
               }
             </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filtros */}
-      <div className="card bg-base-100 shadow-lg mb-6">
-        <div className="card-body">
+      <Card className="shadow-lg mb-6">
+        <CardContent className="p-6">
           <div className="flex gap-2">
-            <button
+            <Button
               onClick={() => setFilter("todos")}
-              className={`btn btn-sm ${
-                filter === "todos" ? "btn-primary" : "btn-ghost"
-              }`}
+              variant={filter === "todos" ? "default" : "ghost"}
+              size="sm"
             >
               Todos
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setFilter("sin-stock")}
-              className={`btn btn-sm ${
-                filter === "sin-stock" ? "btn-error" : "btn-ghost"
-              }`}
+              variant={filter === "sin-stock" ? "destructive" : "ghost"}
+              size="sm"
             >
               Sin Stock
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setFilter("bajo")}
-              className={`btn btn-sm ${
-                filter === "bajo" ? "btn-warning" : "btn-ghost"
-              }`}
+              variant={filter === "bajo" ? "secondary" : "ghost"}
+              size="sm"
             >
               Stock Bajo
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Tabla de inventario */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body p-0">
-            <div className="p-4 border-b border-base-300">
-              <h2 className="text-xl font-bold flex items-center gap-2">
+      {/* Layout principal con sidebar */}
+      <div className="flex gap-6">
+        {/* Tabla de inventario - ocupa el espacio disponible */}
+        <div
+          className={`transition-all duration-300 ease-in-out ${
+            movimientosOpen ? "flex-1 max-w-[calc(100%-320px)]" : "flex-1"
+          }`}
+        >
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <Package className="w-5 h-5" />
                 Stock Actual
-              </h2>
-            </div>
-            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-              <table className="table table-sm table-pin-rows">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Stock</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {productosFiltrados.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="text-center py-8 text-base-content/50"
-                      >
-                        No hay productos
-                      </td>
-                    </tr>
-                  ) : (
-                    productosFiltrados.map((producto) => {
-                      const stock = producto.inventario?.cantidadActual || 0;
-                      return (
-                        <tr key={producto.id}>
-                          <td>
-                            <div>
-                              <p className="font-semibold">{producto.nombre}</p>
-                              <p className="text-xs text-base-content/60">
-                                {producto.sku}
-                              </p>
-                            </div>
-                          </td>
-                          <td>
-                            <span className={`badge ${getBadgeClass(stock)}`}>
-                              {stock} {producto.unidad}
-                            </span>
-                          </td>
-                          <td>
-                            <button
-                              onClick={() => {
-                                setSelectedProducto({
-                                  id: producto.id,
-                                  nombre: producto.nombre,
-                                });
-                                setShowForm(true);
-                              }}
-                              className="btn btn-ghost btn-xs"
-                              title="Registrar movimiento"
-                            >
-                              <Edit3 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Producto</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {productosFiltrados.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={3}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          No hay productos
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      productosFiltrados.map((producto) => {
+                        const stock = producto.inventario?.cantidadActual || 0;
+                        return (
+                          <TableRow key={producto.id}>
+                            <TableCell>
+                              <div>
+                                <p className="font-semibold">
+                                  {producto.nombre}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {producto.sku}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={getBadgeVariant(stock)}>
+                                {stock} {producto.unidad}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                onClick={() => {
+                                  setSelectedProducto({
+                                    id: producto.id,
+                                    nombre: producto.nombre,
+                                  });
+                                  setShowForm(true);
+                                }}
+                                variant="ghost"
+                                size="sm"
+                                title="Registrar movimiento"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Historial de movimientos */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body p-0">
-            <div className="p-4 border-b border-base-300">
-              <h2 className="text-xl font-bold">Últimos Movimientos</h2>
-            </div>
-            <div className="overflow-y-auto max-h-[600px]">
-              <div className="p-4 space-y-2">
-                {movimientos.length === 0 ? (
-                  <div className="text-center py-8 text-base-content/50">
-                    No hay movimientos registrados
-                  </div>
-                ) : (
-                  movimientos.map((mov) => (
-                    <div key={mov.id} className="card bg-base-200">
-                      <div className="card-body p-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-2 flex-1">
-                            {getCategoriaIcon(mov.tipo, mov.categoria)}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-sm truncate">
-                                {mov.producto.nombre}
-                              </p>
-                              <p className="text-xs text-base-content/60">
-                                {mov.tipo === "entrada" ? "+" : "-"}
-                                {mov.cantidad} {mov.producto.unidad}
-                              </p>
-                              {mov.notas && (
-                                <p className="text-xs text-base-content/50 mt-1 line-clamp-2">
-                                  {mov.notas}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span
-                              className={`badge badge-sm ${getCategoriaColor(
-                                mov.categoria
-                              )}`}
-                            >
-                              {mov.categoria}
-                            </span>
-                            <p className="text-xs text-base-content/50 mt-1">
-                              {formatFecha(mov.fecha)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+        {/* Sidebar de movimientos */}
+        <div
+          className={`transition-all duration-300 ease-in-out ${
+            movimientosOpen ? "w-80" : "w-12"
+          }`}
+        >
+          <Collapsible open={movimientosOpen} onOpenChange={setMovimientosOpen}>
+            <Card className="shadow-lg h-full">
+              <CardHeader
+                className={`cursor-pointer hover:bg-muted/50 transition-colors ${
+                  movimientosOpen ? "" : "p-2"
+                }`}
+                onClick={() => setMovimientosOpen(!movimientosOpen)}
+              >
+                {movimientosOpen ? (
+                  <CardTitle className="flex items-center justify-between">
+                    Últimos Movimientos
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {movimientos.length}
+                      </Badge>
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
                     </div>
-                  ))
+                  </CardTitle>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <Badge variant="secondary" className="text-xs">
+                      {movimientos.length}
+                    </Badge>
+                    <div
+                      className="text-sm font-semibold text-muted-foreground text-center"
+                      style={{
+                        writingMode: "vertical-rl",
+                        textOrientation: "mixed",
+                      }}
+                    >
+                      Últimos Movimientos
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </div>
                 )}
-              </div>
-            </div>
-          </div>
+              </CardHeader>
+              <CollapsibleContent>
+                <CardContent className="p-0">
+                  <div className="overflow-y-auto max-h-[600px]">
+                    <div className="p-4 space-y-2">
+                      {movimientos.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          No hay movimientos registrados
+                        </div>
+                      ) : (
+                        movimientos.map((mov) => (
+                          <Card key={mov.id} className="bg-muted/50">
+                            <CardContent className="p-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-start gap-2 flex-1">
+                                  {getCategoriaIcon(mov.tipo, mov.categoria)}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-sm truncate">
+                                      {mov.producto.nombre}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {mov.tipo === "entrada" ? "+" : "-"}
+                                      {mov.cantidad} {mov.producto.unidad}
+                                    </p>
+                                    {mov.notas && (
+                                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                        {mov.notas}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <Badge
+                                    variant={getCategoriaBadgeVariant(
+                                      mov.categoria
+                                    )}
+                                    className="text-xs"
+                                  >
+                                    {mov.categoria}
+                                  </Badge>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {formatFecha(mov.fecha)}
+                                  </p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
         </div>
       </div>
 

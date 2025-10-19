@@ -2,14 +2,26 @@
 "use client";
 
 import { useState } from "react";
-import { X, DollarSign } from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { CartItem } from "@/types/cart";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Card, CardContent } from "./ui/card";
+import { Alert } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from "./ui/dialog";
 
 type Props = {
-  cart: CartItem[];
-  total: number;
-  onClose: () => void;
-  onConfirm: (recibido: number) => Promise<void>;
+  readonly cart: CartItem[];
+  readonly total: number;
+  readonly onClose: () => void;
+  readonly onConfirm: (recibido: number) => Promise<void>;
 };
 
 export default function CheckoutModal({
@@ -22,7 +34,7 @@ export default function CheckoutModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const recibidoNum = parseFloat(recibido) || 0;
+  const recibidoNum = Number.parseFloat(recibido) || 0;
   const cambio = recibidoNum - total;
 
   const handleConfirm = async () => {
@@ -36,29 +48,24 @@ export default function CheckoutModal({
 
     try {
       await onConfirm(recibidoNum);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-base-100 rounded-lg shadow-xl max-w-md w-full">
-        <div className="flex items-center justify-between p-6 border-b border-base-300">
-          <h2 className="text-2xl font-bold text-base-content">
-            Finalizar Venta
-          </h2>
-          <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Finalizar Venta</DialogTitle>
+        </DialogHeader>
 
-        <div className="p-6 space-y-4">
+        <div className="space-y-4">
           {error && (
-            <div className="alert alert-error">
+            <Alert variant="error">
               <span>{error}</span>
-            </div>
+            </Alert>
           )}
 
           {/* Resumen */}
@@ -75,7 +82,7 @@ export default function CheckoutModal({
             ))}
           </div>
 
-          <div className="divider"></div>
+          <div className="border-t my-4"></div>
 
           {/* Total */}
           <div className="flex justify-between items-center text-xl font-bold">
@@ -84,77 +91,81 @@ export default function CheckoutModal({
           </div>
 
           {/* Monto recibido */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-semibold">Monto Recibido</span>
-            </label>
-            <label className="input-group">
-              <span className="bg-primary text-primary-content">
-                <DollarSign className="w-5 h-5" />
-              </span>
-              <input
+          <div className="space-y-2">
+            <Label htmlFor="monto-recibido" className="font-semibold">
+              Monto Recibido
+            </Label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+              <Input
+                id="monto-recibido"
                 type="number"
                 step="0.01"
-                className="input input-bordered w-full text-lg"
+                className="pl-10 text-lg"
                 value={recibido}
                 onChange={(e) => setRecibido(e.target.value)}
                 placeholder="0.00"
                 autoFocus
               />
-            </label>
+            </div>
           </div>
 
           {/* Cambio */}
           {recibidoNum > 0 && (
-            <div className="card bg-base-200">
-              <div className="card-body py-4">
+            <Card className="bg-muted/50">
+              <CardContent className="py-4">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold">Cambio:</span>
                   <span
                     className={`text-2xl font-bold ${
-                      cambio >= 0 ? "text-success" : "text-error"
+                      cambio >= 0 ? "text-green-600" : "text-destructive"
                     }`}
                   >
                     ${cambio.toFixed(2)}
                   </span>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Botones de acceso rápido */}
           <div className="grid grid-cols-3 gap-2">
             {[50, 100, 200, 500, 1000].map((monto) => (
-              <button
+              <Button
                 key={monto}
                 type="button"
                 onClick={() => setRecibido(monto.toString())}
-                className="btn btn-sm btn-outline"
+                variant="outline"
+                size="sm"
               >
                 ${monto}
-              </button>
+              </Button>
             ))}
-            <button
+            <Button
               type="button"
               onClick={() => setRecibido(total.toString())}
-              className="btn btn-sm btn-outline"
+              variant="outline"
+              size="sm"
             >
               Exacto
-            </button>
+            </Button>
           </div>
+        </div>
 
-          {/* Botones */}
-          <div className="flex gap-3 pt-4">
-            <button
+        <DialogFooter>
+          <div className="flex gap-3 w-full">
+            <Button
               onClick={onClose}
-              className="btn btn-ghost flex-1"
+              variant="outline"
+              className="flex-1"
               disabled={loading}
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleConfirm}
-              className="btn btn-primary flex-1"
+              variant="default"
+              className="flex-1"
               disabled={loading || recibidoNum < total}
             >
               {loading ? (
@@ -162,10 +173,10 @@ export default function CheckoutModal({
               ) : (
                 "Confirmar Venta"
               )}
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
