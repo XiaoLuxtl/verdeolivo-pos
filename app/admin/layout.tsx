@@ -6,7 +6,7 @@ import Sidebar from "@/components/Sidebar";
 export default function AdminLayout({
   children,
 }: {
-  children: React.ReactNode;
+  readonly children: React.ReactNode;
 }) {
   const [sidebarWidth, setSidebarWidth] = useState(256); // 64 * 4 = w-64
 

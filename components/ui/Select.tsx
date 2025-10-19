@@ -1,13 +1,14 @@
-// components/ui/select.tsx
 "use client";
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-const SelectContext = React.createContext<{
+interface SelectContextType {
   value?: string;
   onValueChange?: (value: string) => void;
-}>({});
+}
+
+const SelectContext = React.createContext<SelectContextType>({});
 
 // Trigger - el elemento que se hace click para abrir
 const SelectTrigger = React.forwardRef<
@@ -19,14 +20,27 @@ const SelectTrigger = React.forwardRef<
   const { value } = React.useContext(SelectContext);
   const [isOpen, setIsOpen] = React.useState(false);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setIsOpen(!isOpen);
+    } else if (e.key === "Escape" && isOpen) {
+      setIsOpen(false);
+    }
+  };
+
   return (
     <button
       ref={ref}
+      type="button"
+      aria-expanded={isOpen}
+      aria-haspopup="listbox"
       className={cn(
         "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       onClick={() => setIsOpen(!isOpen)}
+      onKeyDown={handleKeyDown}
       {...props}
     >
       <span className={cn(!value && "text-muted-foreground")}>
@@ -75,10 +89,13 @@ SelectValue.displayName = "SelectValue";
 // Content - el dropdown que aparece
 const SelectContent = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
+  React.HTMLAttributes<HTMLDivElement> & {
+    role?: string;
+  }
 >(({ className, children, ...props }, ref) => (
   <div
     ref={ref}
+    role="listbox"
     className={cn(
       "relative z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-80",
       className
@@ -101,15 +118,26 @@ const SelectItem = React.forwardRef<
     React.useContext(SelectContext);
   const isSelected = selectedValue === value;
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onValueChange?.(value);
+    }
+  };
+
   return (
     <div
       ref={ref}
+      role="option"
+      aria-selected={isSelected}
+      tabIndex={0}
       className={cn(
         "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         isSelected && "bg-accent text-accent-foreground",
         className
       )}
       onClick={() => onValueChange?.(value)}
+      onKeyDown={handleKeyDown}
       {...props}
     >
       <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
@@ -144,8 +172,16 @@ export interface SelectProps {
 }
 
 const Select = ({ value, onValueChange, children }: SelectProps) => {
+  const contextValue = React.useMemo(
+    () => ({
+      value,
+      onValueChange,
+    }),
+    [value, onValueChange]
+  );
+
   return (
-    <SelectContext.Provider value={{ value, onValueChange }}>
+    <SelectContext.Provider value={contextValue}>
       {children}
     </SelectContext.Provider>
   );

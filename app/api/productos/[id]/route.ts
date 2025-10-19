@@ -59,11 +59,21 @@ export async function PUT(
     });
 
     return NextResponse.json(producto);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error al actualizar producto:", error);
-    if (error.code === "P2002") {
-      return NextResponse.json({ error: "El SKU ya existe" }, { status: 400 });
+
+    // Verificar si es un error de Prisma
+    if (error instanceof Error && "code" in error) {
+      const prismaError = error as { code?: string };
+
+      if (prismaError.code === "P2002") {
+        return NextResponse.json(
+          { error: "El SKU ya existe" },
+          { status: 400 }
+        );
+      }
     }
+
     return NextResponse.json(
       { error: "Error al actualizar producto" },
       { status: 500 }

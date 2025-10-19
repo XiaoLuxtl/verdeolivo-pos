@@ -10,19 +10,18 @@ import { Label } from "./ui/label";
 import { Card, CardContent } from "./ui/card";
 import { Alert } from "@/components/ui/alert";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalTitle,
-  ModalClose,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
 } from "./ui/dialog";
 
 type Props = {
-  cart: CartItem[];
-  total: number;
-  onClose: () => void;
-  onConfirm: (recibido: number) => Promise<void>;
+  readonly cart: CartItem[];
+  readonly total: number;
+  readonly onClose: () => void;
+  readonly onConfirm: (recibido: number) => Promise<void>;
 };
 
 export default function CheckoutModal({
@@ -56,12 +55,11 @@ export default function CheckoutModal({
   };
 
   return (
-    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
-      <ModalContent className="max-w-md">
-        <ModalHeader>
-          <ModalTitle>Finalizar Venta</ModalTitle>
-          <ModalClose />
-        </ModalHeader>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Finalizar Venta</DialogTitle>
+        </DialogHeader>
 
         <div className="space-y-4">
           {error && (
@@ -154,11 +152,11 @@ export default function CheckoutModal({
           </div>
         </div>
 
-        <ModalFooter>
+        <DialogFooter>
           <div className="flex gap-3 w-full">
             <Button
               onClick={onClose}
-              variant="ghost"
+              variant="outline"
               className="flex-1"
               disabled={loading}
             >
@@ -177,8 +175,8 @@ export default function CheckoutModal({
               )}
             </Button>
           </div>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -6,20 +6,19 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Alert } from "@/components/ui/alert";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalTitle,
-  ModalClose,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
 } from "./ui/dialog";
 
 type Props = {
-  title: string;
-  message: string;
-  confirmText?: string;
-  onConfirm: () => Promise<void>;
-  onCancel: () => void;
+  readonly title: string;
+  readonly message: string;
+  readonly confirmText?: string;
+  readonly onConfirm: () => Promise<void>;
+  readonly onCancel: () => void;
 };
 
 export default function DeleteConfirmation({
@@ -50,12 +49,11 @@ export default function DeleteConfirmation({
   };
 
   return (
-    <Modal open={true} onOpenChange={(open) => !open && onCancel()}>
-      <ModalContent className="max-w-md">
-        <ModalHeader>
-          <ModalTitle>{title}</ModalTitle>
-          <ModalClose />
-        </ModalHeader>
+    <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
 
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -89,11 +87,11 @@ export default function DeleteConfirmation({
           </div>
         </div>
 
-        <ModalFooter>
+        <DialogFooter>
           <div className="flex gap-3 w-full">
             <Button
               onClick={onCancel}
-              variant="ghost"
+              variant="outline"
               className="flex-1"
               disabled={loading}
             >
@@ -112,8 +110,8 @@ export default function DeleteConfirmation({
               )}
             </Button>
           </div>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

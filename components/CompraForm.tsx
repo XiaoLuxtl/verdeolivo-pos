@@ -2,19 +2,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalDescription,
-  ModalFooter,
-  ModalClose,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -27,26 +26,31 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Loading } from "@/components/ui/loading";
 
+// Función para generar IDs únicos
+const generateId = () =>
+  `detalle-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+
 type Producto = {
-  id: number;
-  nombre: string;
-  sku: string;
-  precioUnitario: number;
-  unidad: string;
-  peso: number;
+  readonly id: number;
+  readonly nombre: string;
+  readonly sku: string;
+  readonly precioUnitario: number;
+  readonly unidad: string;
+  readonly peso: number;
 };
 
 type DetalleCompra = {
-  productoId: string;
-  cantidad: string;
-  costoUnitario: string;
+  readonly id: string;
+  readonly productoId: string;
+  readonly cantidad: string;
+  readonly costoUnitario: string;
   subtotal: number;
 };
 
 type Props = {
-  open?: boolean;
-  onClose: () => void;
-  onSave: () => void;
+  readonly open?: boolean;
+  readonly onClose: () => void;
+  readonly onSave: () => void;
 };
 
 export default function CompraForm({ open = true, onClose, onSave }: Props) {
@@ -78,6 +82,7 @@ export default function CompraForm({ open = true, onClose, onSave }: Props) {
     setDetalles([
       ...detalles,
       {
+        id: generateId(),
         productoId: "",
         cantidad: "",
         costoUnitario: "",
@@ -103,8 +108,8 @@ export default function CompraForm({ open = true, onClose, onSave }: Props) {
 
     // Calcular subtotal
     if (field === "cantidad" || field === "costoUnitario") {
-      const cantidad = parseFloat(nuevosDetalles[index].cantidad) || 0;
-      const costo = parseFloat(nuevosDetalles[index].costoUnitario) || 0;
+      const cantidad = Number.parseFloat(nuevosDetalles[index].cantidad) || 0;
+      const costo = Number.parseFloat(nuevosDetalles[index].costoUnitario) || 0;
       nuevosDetalles[index].subtotal = cantidad * costo;
     }
 
@@ -159,17 +164,21 @@ export default function CompraForm({ open = true, onClose, onSave }: Props) {
   };
 
   const getProductoPeso = (productoId: string) => {
-    const producto = productos.find((p) => p.id === parseInt(productoId));
+    const producto = productos.find(
+      (p) => p.id === Number.parseInt(productoId)
+    );
     return producto?.peso || 0;
   };
 
   const getProductoUnidad = (productoId: string) => {
-    const producto = productos.find((p) => p.id === parseInt(productoId));
+    const producto = productos.find(
+      (p) => p.id === Number.parseInt(productoId)
+    );
     return producto?.unidad || "";
   };
 
   const calcularCantidadTotal = (detalle: DetalleCompra) => {
-    const cantidad = parseFloat(detalle.cantidad) || 0;
+    const cantidad = Number.parseFloat(detalle.cantidad) || 0;
     const peso = getProductoPeso(detalle.productoId);
     return cantidad * peso;
   };
@@ -177,15 +186,14 @@ export default function CompraForm({ open = true, onClose, onSave }: Props) {
   if (!open) return null;
 
   return (
-    <Modal open={open} onOpenChange={onClose}>
-      <ModalContent className="sm:max-w-4xl">
-        <ModalHeader>
-          <ModalTitle>Registrar Compra</ModalTitle>
-          <ModalDescription>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Registrar Compra</DialogTitle>
+          <DialogDescription>
             Completa la información de la compra y agrega los productos.
-          </ModalDescription>
-          <ModalClose />
-        </ModalHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
@@ -255,7 +263,7 @@ export default function CompraForm({ open = true, onClose, onSave }: Props) {
 
             <div className="space-y-3">
               {detalles.map((detalle, index) => (
-                <Card key={index} className="p-4">
+                <Card key={detalle.id} className="p-4">
                   <CardContent className="p-0">
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                       {/* Producto */}
@@ -367,7 +375,7 @@ export default function CompraForm({ open = true, onClose, onSave }: Props) {
           </div>
 
           {/* Botones */}
-          <ModalFooter>
+          <DialogFooter>
             <Button
               type="button"
               onClick={onClose}
@@ -386,9 +394,9 @@ export default function CompraForm({ open = true, onClose, onSave }: Props) {
                 "Registrar Compra"
               )}
             </Button>
-          </ModalFooter>
+          </DialogFooter>
         </form>
-      </ModalContent>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 }

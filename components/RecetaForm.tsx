@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
 import ImageUpload from "./ImageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalTitle,
-  ModalClose,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
 } from "./ui/dialog";
 
 type Receta = {
@@ -23,9 +23,9 @@ type Receta = {
 };
 
 type Props = {
-  receta?: Receta;
-  onClose: () => void;
-  onSave: () => void;
+  readonly receta?: Receta;
+  readonly onClose: () => void;
+  readonly onSave: () => void;
 };
 
 export default function RecetaForm({ receta, onClose, onSave }: Props) {
@@ -74,15 +74,16 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
     }
   };
 
+  const submitButtonText = receta?.id ? "Actualizar" : "Crear Receta";
+
   return (
-    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
-      <ModalContent className="max-w-2xl">
-        <ModalHeader>
-          <ModalTitle className="text-2xl font-bold">
-            {receta?.id ? "Editar Receta" : "Nueva Receta"}
-          </ModalTitle>
-          <ModalClose />
-        </ModalHeader>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">
+            {receta ? "Editar Receta" : "Nueva Receta"}
+          </DialogTitle>
+        </DialogHeader>
 
         <div className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -99,11 +100,10 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
             />
 
             {/* Nombre */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Nombre de la Receta *</span>
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="nombre">Nombre de la Receta *</Label>
               <Input
+                id="nombre"
                 type="text"
                 required
                 value={formData.nombre}
@@ -115,11 +115,10 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
             </div>
 
             {/* Precio de Venta */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Precio de Venta *</span>
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="precioVenta">Precio de Venta *</Label>
               <Input
+                id="precioVenta"
                 type="number"
                 step="0.01"
                 required
@@ -132,17 +131,16 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
             </div>
 
             {/* Descripción */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Descripción</span>
-              </label>
-              <textarea
-                className="textarea textarea-bordered h-24"
+            <div className="space-y-2">
+              <Label htmlFor="descripcion">Descripción</Label>
+              <Textarea
+                id="descripcion"
                 value={formData.descripcion}
                 onChange={(e) =>
                   setFormData({ ...formData, descripcion: e.target.value })
                 }
                 placeholder="Descripción opcional de la receta..."
+                rows={3}
               />
             </div>
 
@@ -165,21 +163,19 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
               <Button type="submit" variant="default" disabled={loading}>
                 {loading ? (
                   <span className="loading loading-spinner"></span>
-                ) : receta?.id ? (
-                  "Actualizar"
                 ) : (
-                  "Crear Receta"
+                  submitButtonText
                 )}
               </Button>
             </div>
           </form>
         </div>
 
-        <ModalFooter>
+        <DialogFooter>
           <div className="flex gap-3 w-full">
             <Button
               onClick={onClose}
-              variant="ghost"
+              variant="outline"
               className="flex-1"
               disabled={loading}
             >
@@ -194,15 +190,13 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
             >
               {loading ? (
                 <span className="loading loading-spinner"></span>
-              ) : receta?.id ? (
-                "Actualizar"
               ) : (
-                "Crear Receta"
+                submitButtonText
               )}
             </Button>
           </div>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

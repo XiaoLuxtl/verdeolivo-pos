@@ -2,9 +2,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -12,7 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Modal, ModalHeader, ModalContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogHeader,
+  DialogContent,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type Producto = {
   id: number;
@@ -24,9 +30,9 @@ type Producto = {
 };
 
 type Props = {
-  productoSeleccionado?: { id: number; nombre: string };
-  onClose: () => void;
-  onSave: () => void;
+  readonly productoSeleccionado?: { id: number; nombre: string };
+  readonly onClose: () => void;
+  readonly onSave: () => void;
 };
 
 export default function MovimientoForm({
@@ -62,7 +68,7 @@ export default function MovimientoForm({
   const getStockActual = () => {
     if (!formData.productoId) return null;
     const producto = productos.find(
-      (p) => p.id === parseInt(formData.productoId)
+      (p) => p.id === Number.parseInt(formData.productoId)
     );
     return producto?.inventario?.cantidadActual || 0;
   };
@@ -70,7 +76,7 @@ export default function MovimientoForm({
   const getUnidad = () => {
     if (!formData.productoId) return "";
     const producto = productos.find(
-      (p) => p.id === parseInt(formData.productoId)
+      (p) => p.id === Number.parseInt(formData.productoId)
     );
     return producto?.unidad || "";
   };
@@ -102,19 +108,11 @@ export default function MovimientoForm({
   };
 
   return (
-    <Modal>
-      <ModalHeader>
-        <div className="flex justify-between items-center w-full">
-          <h2 className="text-2xl font-bold text-base-content">
-            Registrar Movimiento
-          </h2>
-          <Button type="button" onClick={onClose} variant="ghost" size="sm">
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
-      </ModalHeader>
-
-      <ModalContent>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <h2 className="text-2xl font-bold">Registrar Movimiento</h2>
+        </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="alert alert-error">
@@ -123,17 +121,15 @@ export default function MovimientoForm({
           )}
 
           {/* Producto */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Producto *</span>
-            </label>
+          <div className="space-y-2">
+            <Label htmlFor="producto">Producto *</Label>
             <Select
               value={formData.productoId}
               onValueChange={(value) =>
                 setFormData({ ...formData, productoId: value })
               }
             >
-              <SelectTrigger disabled={!!productoSeleccionado}>
+              <SelectTrigger id="producto" disabled={!!productoSeleccionado}>
                 <SelectValue placeholder="Seleccionar..." />
               </SelectTrigger>
               <SelectContent>
@@ -149,17 +145,15 @@ export default function MovimientoForm({
 
           {/* Tipo y Categoría */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Tipo *</span>
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="tipo">Tipo *</Label>
               <Select
                 value={formData.tipo}
                 onValueChange={(value) =>
                   setFormData({ ...formData, tipo: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger id="tipo">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -169,17 +163,15 @@ export default function MovimientoForm({
               </Select>
             </div>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Categoría *</span>
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="categoria">Categoría *</Label>
               <Select
                 value={formData.categoria}
                 onValueChange={(value) =>
                   setFormData({ ...formData, categoria: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger id="categoria">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -191,11 +183,10 @@ export default function MovimientoForm({
           </div>
 
           {/* Cantidad */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Cantidad *</span>
-            </label>
+          <div className="space-y-2">
+            <Label htmlFor="cantidad">Cantidad *</Label>
             <Input
+              id="cantidad"
               type="number"
               step="0.01"
               required
@@ -206,55 +197,63 @@ export default function MovimientoForm({
               placeholder="0.00"
             />
             {formData.productoId && (
-              <label className="label">
-                <span className="label-text-alt">
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p>
                   Stock actual: {getStockActual()} {getUnidad()}
-                </span>
+                </p>
                 {formData.cantidad && formData.tipo === "salida" && (
-                  <span className="label-text-alt text-info">
+                  <p className="text-blue-600">
                     Quedarán:{" "}
                     {(getStockActual() || 0) -
-                      parseFloat(formData.cantidad || "0")}{" "}
+                      Number.parseFloat(formData.cantidad || "0")}{" "}
                     {getUnidad()}
-                  </span>
+                  </p>
                 )}
                 {formData.cantidad && formData.tipo === "entrada" && (
-                  <span className="label-text-alt text-success">
+                  <p className="text-green-600">
                     Quedarán:{" "}
                     {(getStockActual() || 0) +
-                      parseFloat(formData.cantidad || "0")}{" "}
+                      Number.parseFloat(formData.cantidad || "0")}{" "}
                     {getUnidad()}
-                  </span>
+                  </p>
                 )}
-              </label>
+              </div>
             )}
           </div>
 
           {/* Notas */}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Notas</span>
-            </label>
-            <textarea
-              className="textarea textarea-bordered h-24"
+          <div className="space-y-2">
+            <Label htmlFor="notas">Notas</Label>
+            <Textarea
+              id="notas"
               value={formData.notas}
               onChange={(e) =>
                 setFormData({ ...formData, notas: e.target.value })
               }
               placeholder="Motivo del movimiento..."
+              rows={3}
             />
           </div>
+        </form>
 
-          <div className="flex gap-3 justify-end pt-4">
+        <DialogFooter>
+          <div className="flex gap-3 w-full">
             <Button
               type="button"
               onClick={onClose}
-              variant="ghost"
+              variant="outline"
+              className="flex-1"
               disabled={loading}
             >
               Cancelar
             </Button>
-            <Button type="submit" variant="default" disabled={loading}>
+            <Button
+              type="submit"
+              variant="default"
+              className="flex-1"
+              disabled={loading}
+              onClick={handleSubmit}
+            >
               {loading ? (
                 <span className="loading loading-spinner"></span>
               ) : (
@@ -262,8 +261,8 @@ export default function MovimientoForm({
               )}
             </Button>
           </div>
-        </form>
-      </ModalContent>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

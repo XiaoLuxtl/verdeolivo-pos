@@ -17,13 +17,32 @@ import {
 } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
 
+type IngredienteReceta = {
+  id: number;
+  cantidad: number;
+  producto: {
+    id: number;
+    nombre: string;
+    unidad: string;
+    precioUnitario: number;
+  };
+};
+
 type Receta = {
   id: number;
   nombre: string;
   descripcion: string | null;
   precioVenta: number;
   imagen: string | null;
-  ingredientes: any[];
+  ingredientes: IngredienteReceta[];
+};
+
+type RecetaFormData = {
+  id?: number;
+  nombre: string;
+  descripcion: string;
+  precioVenta: string;
+  imagen: string | null;
 };
 
 export default function RecetasPage() {
@@ -32,7 +51,9 @@ export default function RecetasPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [selectedReceta, setSelectedReceta] = useState<any>(null);
+  const [selectedReceta, setSelectedReceta] = useState<RecetaFormData | null>(
+    null
+  );
   const [showIngredientes, setShowIngredientes] = useState(false);
   const [recetaIngredientes, setRecetaIngredientes] = useState<{
     id: number;
@@ -244,7 +265,7 @@ export default function RecetasPage() {
       {/* Formulario de receta */}
       {showForm && (
         <RecetaForm
-          receta={selectedReceta}
+          receta={selectedReceta || undefined}
           onClose={handleCloseForm}
           onSave={fetchRecetas}
         />

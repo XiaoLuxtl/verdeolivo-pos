@@ -2,14 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Plus,
-  AlertTriangle,
-  Package,
-  TrendingDown,
-  TrendingUp,
-  Edit3,
-} from "lucide-react";
+import { Plus, Package, TrendingDown, TrendingUp, Edit3 } from "lucide-react";
 import MovimientoForm from "@/components/MovimientoForm";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

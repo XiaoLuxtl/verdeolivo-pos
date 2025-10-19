@@ -1,6 +1,7 @@
 // Ruta: app/api/inventario/movimientos/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 // POST - Registrar movimiento manual (merma o ajuste)
 export async function POST(request: Request) {
@@ -58,12 +59,11 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(movimiento);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error al registrar movimiento:", error);
-    return NextResponse.json(
-      { error: error.message || "Error al registrar movimiento" },
-      { status: 500 }
-    );
+    const errorMessage =
+      error instanceof Error ? error.message : "Error al registrar movimiento";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
     const productoId = searchParams.get("productoId");
     const categoria = searchParams.get("categoria");
 
-    const where: any = {};
+    const where: Prisma.MovimientoInventarioWhereInput = {};
 
     if (productoId) {
       where.productoId = parseInt(productoId);
@@ -92,15 +92,14 @@ export async function GET(request: Request) {
       orderBy: {
         fecha: "desc",
       },
-      take: 100, // Últimos 100 movimientos
+      take: 100,
     });
 
     return NextResponse.json(movimientos);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error al obtener movimientos:", error);
-    return NextResponse.json(
-      { error: "Error al obtener movimientos" },
-      { status: 500 }
-    );
+    const errorMessage =
+      error instanceof Error ? error.message : "Error al obtener movimientos";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

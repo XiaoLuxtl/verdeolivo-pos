@@ -2,6 +2,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Definir tipo para productos más movidos
+interface ProductoMovimiento {
+  nombre: string;
+  movimientos: number;
+  entradas: number;
+  salidas: number;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -51,7 +59,7 @@ export async function GET(request: Request) {
     // Agrupar movimientos por categoría
     const movimientosPorCategoria = movimientos.reduce((acc, mov) => {
       if (!acc[mov.categoria]) {
-        acc[mov.categoria] = { cantidad: 0, productos: new Set() };
+        acc[mov.categoria] = { cantidad: 0, productos: new Set<number>() };
       }
       acc[mov.categoria].cantidad += 1;
       acc[mov.categoria].productos.add(mov.productoId);
@@ -68,7 +76,7 @@ export async function GET(request: Request) {
       (p) => (p.inventario?.cantidadActual || 0) === 0
     );
 
-    // Movimientos más frecuentes
+    // Movimientos más frecuentes - CORREGIDO (sin any)
     const productosMasMovidos = Object.entries(
       movimientos.reduce((acc, mov) => {
         const key = mov.productoId;
@@ -87,9 +95,9 @@ export async function GET(request: Request) {
           acc[key].salidas += mov.cantidad;
         }
         return acc;
-      }, {} as { [key: number]: any })
+      }, {} as { [key: number]: ProductoMovimiento })
     )
-      .map(([id, data]) => data)
+      .map(([id, data]) => ({ ...data, id: Number(id) })) // CORREGIDO: usar 'id'
       .sort((a, b) => b.movimientos - a.movimientos)
       .slice(0, 10);
 
@@ -126,11 +134,10 @@ export async function GET(request: Request) {
         })),
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error al generar reporte de inventario:", error);
-    return NextResponse.json(
-      { error: "Error al generar reporte" },
-      { status: 500 }
-    );
+    const errorMessage =
+      error instanceof Error ? error.message : "Error al generar reporte";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

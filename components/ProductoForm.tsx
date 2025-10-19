@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import {
   Select,
   SelectContent,
@@ -13,15 +14,14 @@ import {
 import { Textarea } from "./ui/textarea";
 import { Alert } from "@/components/ui/alert";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalTitle,
-  ModalClose,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
 } from "./ui/dialog";
 
-type Producto = {
+export type Producto = {
   id?: number;
   sku: string;
   nombre: string;
@@ -34,9 +34,9 @@ type Producto = {
 };
 
 type Props = {
-  producto?: Producto;
-  onClose: () => void;
-  onSave: () => void;
+  readonly producto?: Producto | null;
+  readonly onClose: () => void;
+  readonly onSave: () => void;
 };
 
 const unidadesDisponibles = ["gr", "ml", "pz", "kg", "lt"];
@@ -93,15 +93,16 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
     }
   };
 
+  const submitButtonText = producto?.id ? "Actualizar" : "Crear";
+
   return (
-    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
-      <ModalContent className="max-w-2xl">
-        <ModalHeader>
-          <ModalTitle>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>
             {producto?.id ? "Editar Producto" : "Nuevo Producto"}
-          </ModalTitle>
-          <ModalClose />
-        </ModalHeader>
+          </DialogTitle>
+        </DialogHeader>
 
         <div className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -113,11 +114,10 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* SKU */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">SKU *</span>
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="sku">SKU *</Label>
                 <Input
+                  id="sku"
                   type="text"
                   required
                   value={formData.sku}
@@ -128,11 +128,10 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
               </div>
 
               {/* Nombre */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Nombre *</span>
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="nombre">Nombre *</Label>
                 <Input
+                  id="nombre"
                   type="text"
                   required
                   value={formData.nombre}
@@ -143,11 +142,10 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
               </div>
 
               {/* Sabor */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Sabor</span>
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="sabor">Sabor</Label>
                 <Input
+                  id="sabor"
                   type="text"
                   value={formData.sabor}
                   onChange={(e) =>
@@ -157,11 +155,10 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
               </div>
 
               {/* Proveedor */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Proveedor</span>
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="proveedor">Proveedor</Label>
                 <Input
+                  id="proveedor"
                   type="text"
                   value={formData.proveedor}
                   onChange={(e) =>
@@ -171,11 +168,10 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
               </div>
 
               {/* Precio Unitario */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Precio Unitario *</span>
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="precioUnitario">Precio Unitario *</Label>
                 <Input
+                  id="precioUnitario"
                   type="number"
                   step="0.01"
                   required
@@ -187,11 +183,10 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
               </div>
 
               {/* Peso */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Peso/Cantidad</span>
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="peso">Peso/Cantidad</Label>
                 <Input
+                  id="peso"
                   type="number"
                   step="0.01"
                   value={formData.peso}
@@ -202,17 +197,15 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
               </div>
 
               {/* Unidad */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Unidad *</span>
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="unidad">Unidad *</Label>
                 <Select
                   value={formData.unidad}
                   onValueChange={(value) =>
                     setFormData({ ...formData, unidad: value })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="unidad">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -227,16 +220,15 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
             </div>
 
             {/* Descripción */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Descripción</span>
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="descripcion">Descripción</Label>
               <Textarea
-                className="h-24"
+                id="descripcion"
                 value={formData.descripcion}
                 onChange={(e) =>
                   setFormData({ ...formData, descripcion: e.target.value })
                 }
+                rows={3}
               />
             </div>
 
@@ -252,21 +244,19 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
               <Button type="submit" variant="default" disabled={loading}>
                 {loading ? (
                   <span className="loading loading-spinner"></span>
-                ) : producto?.id ? (
-                  "Actualizar"
                 ) : (
-                  "Crear"
+                  submitButtonText
                 )}
               </Button>
             </div>
           </form>
         </div>
 
-        <ModalFooter>
+        <DialogFooter>
           <div className="flex gap-3 w-full">
             <Button
               onClick={onClose}
-              variant="ghost"
+              variant="outline"
               className="flex-1"
               disabled={loading}
             >
@@ -281,15 +271,13 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
             >
               {loading ? (
                 <span className="loading loading-spinner"></span>
-              ) : producto?.id ? (
-                "Actualizar"
               ) : (
-                "Crear"
+                submitButtonText
               )}
             </Button>
           </div>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
