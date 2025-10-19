@@ -42,7 +42,11 @@ type Props = {
   readonly onSave: () => void;
 };
 
-const unidadesDisponibles = ["gr", "ml", "pz", "kg", "lt"];
+const unidadesDisponibles = [
+  { value: "GR", label: "Gramos (gr)" },
+  { value: "ML", label: "Mililitros (ml)" },
+  { value: "PZ", label: "Piezas (pz)" },
+] as const;
 
 export default function ProductoForm({ producto, onClose, onSave }: Props) {
   const [formData, setFormData] = useState<Producto>({
@@ -53,7 +57,7 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
     precioUnitario: "",
     peso: "",
     precioPorUnidad: "",
-    unidad: "gr",
+    unidad: "GR",
     descripcion: "",
     stockMinimo: "",
     descripcionUmbral: "",
@@ -235,8 +239,8 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
                   </SelectTrigger>
                   <SelectContent>
                     {unidadesDisponibles.map((unidad) => (
-                      <SelectItem key={unidad} value={unidad}>
-                        {unidad}
+                      <SelectItem key={unidad.value} value={unidad.value}>
+                        {unidad.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

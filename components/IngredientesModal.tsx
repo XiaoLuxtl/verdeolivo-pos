@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,27 +19,37 @@ import {
   DialogHeader,
   DialogFooter,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Loading } from "@/components/ui/loading";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-type Producto = {
+type UnidadMedida = "GR" | "ML" | "PZ";
+
+interface Producto {
   readonly id: number;
   readonly nombre: string;
-  readonly unidad: string;
-};
+  readonly unidad: UnidadMedida;
+}
 
-type Ingrediente = {
+interface Ingrediente {
   readonly id: number;
   readonly cantidad: number;
-  readonly unidad: string;
+  readonly unidad: UnidadMedida;
   readonly producto: Producto;
-};
+}
 
-type Props = {
+interface IngredienteFormData {
+  productoId: string;
+  cantidad: string;
+  unidad: UnidadMedida;
+}
+
+interface Props {
   readonly recetaId: number;
   readonly recetaNombre: string;
   readonly onClose: () => void;
-};
+}
 
 export default function IngredientesModal({
   recetaId,
@@ -50,26 +60,43 @@ export default function IngredientesModal({
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
+  const [error, setError] = useState<string>("");
+  const [formData, setFormData] = useState<IngredienteFormData>({
     productoId: "",
     cantidad: "",
-    unidad: "gr",
+    unidad: "GR",
   });
+
+  // Unidades disponibles
+  const unidadesDisponibles = useMemo(
+    () => [
+      { value: "GR" as const, label: "Gramos (gr)" },
+      { value: "ML" as const, label: "Mililitros (ml)" },
+      { value: "PZ" as const, label: "Piezas (pz)" },
+    ],
+    []
+  );
 
   const fetchData = useCallback(async () => {
     try {
+      setError("");
       const [ingredientesRes, productosRes] = await Promise.all([
         fetch(`/api/recetas/${recetaId}/ingredientes`),
         fetch("/api/productos"),
       ]);
 
-      const ingredientesData = await ingredientesRes.json();
-      const productosData = await productosRes.json();
+      if (!ingredientesRes.ok || !productosRes.ok) {
+        throw new Error("Error al cargar los datos");
+      }
+
+      const ingredientesData: Ingrediente[] = await ingredientesRes.json();
+      const productosData: Producto[] = await productosRes.json();
 
       setIngredientes(ingredientesData);
       setProductos(productosData);
     } catch (error) {
       console.error("Error al cargar datos:", error);
+      setError("Error al cargar los ingredientes y productos");
     } finally {
       setLoading(false);
     }
@@ -79,24 +106,73 @@ export default function IngredientesModal({
     fetchData();
   }, [fetchData]);
 
+  // Auto-seleccionar unidad cuando cambia el producto
+  const handleProductoChange = useCallback(
+    (productoId: string) => {
+      const producto = productos.find((p) => p.id.toString() === productoId);
+      setFormData((prev) => ({
+        ...prev,
+        productoId,
+        unidad: producto?.unidad || "GR",
+      }));
+    },
+    [productos]
+  );
+
+  const handleUnidadChange = useCallback((unidad: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      unidad: unidad as UnidadMedida,
+    }));
+  }, []);
+
+  const validarFormulario = useCallback((): string | null => {
+    if (!formData.productoId) {
+      return "Selecciona un producto";
+    }
+    if (!formData.cantidad || Number.parseFloat(formData.cantidad) <= 0) {
+      return "Ingresa una cantidad válida mayor a 0";
+    }
+    return null;
+  }, [formData]);
+
   const handleAddIngrediente = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const errorValidacion = validarFormulario();
+    if (errorValidacion) {
+      setError(errorValidacion);
+      return;
+    }
+
     try {
+      setError("");
+      const payload = {
+        ...formData,
+        cantidad: Number.parseFloat(formData.cantidad),
+      };
+
       const response = await fetch(`/api/recetas/${recetaId}/ingredientes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Error al agregar ingrediente");
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(
+          data.error || `Error ${response.status}: ${response.statusText}`
+        );
+      }
 
       await fetchData();
-      setFormData({ productoId: "", cantidad: "", unidad: "gr" });
+      setFormData({ productoId: "", cantidad: "", unidad: "GR" });
       setShowForm(false);
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Error al agregar ingrediente");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Error desconocido";
+      setError(errorMessage);
+      console.error("Error al agregar ingrediente:", err);
     }
   };
 
@@ -104,17 +180,23 @@ export default function IngredientesModal({
     if (!confirm("¿Eliminar este ingrediente?")) return;
 
     try {
+      setError("");
       const response = await fetch(
         `/api/recetas/${recetaId}/ingredientes/${ingredienteId}`,
         { method: "DELETE" }
       );
 
-      if (!response.ok) throw new Error("Error al eliminar");
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Error al eliminar ingrediente");
+      }
 
       await fetchData();
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Error al eliminar ingrediente");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Error desconocido";
+      setError(errorMessage);
+      console.error("Error al eliminar ingrediente:", err);
     }
   };
 
@@ -134,11 +216,23 @@ export default function IngredientesModal({
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Ingredientes</DialogTitle>
-          <p className="text-sm text-muted-foreground mt-1">{recetaNombre}</p>
+          <DialogTitle className="text-2xl font-bold">
+            Ingredientes de Receta
+          </DialogTitle>
+          <DialogDescription>
+            Gestiona los ingredientes necesarios para preparar:{" "}
+            <strong>{recetaNombre}</strong>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Mostrar errores */}
+          {error && (
+            <Alert variant="error">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           {/* Botón agregar */}
           {!showForm && (
             <Button
@@ -162,69 +256,106 @@ export default function IngredientesModal({
                 <form onSubmit={handleAddIngrediente}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="producto">Producto</Label>
+                      <Label htmlFor="producto">Producto *</Label>
                       <Select
                         value={formData.productoId}
-                        onValueChange={(value) =>
-                          setFormData({ ...formData, productoId: value })
-                        }
+                        onValueChange={handleProductoChange}
                       >
                         <SelectTrigger id="producto">
-                          <SelectValue placeholder="Seleccionar..." />
+                          <SelectValue placeholder="Seleccionar producto..." />
                         </SelectTrigger>
                         <SelectContent>
                           {productos.map((p) => (
                             <SelectItem key={p.id} value={p.id.toString()}>
-                              {p.nombre}
+                              {p.nombre} ({p.unidad.toLowerCase()})
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Al seleccionar un producto, la unidad se
+                        auto-seleccionará
+                      </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="cantidad">Cantidad</Label>
+                      <Label htmlFor="cantidad">
+                        Cantidad *
+                        {formData.productoId && (
+                          <span className="text-xs text-muted-foreground ml-2">
+                            (en {formData.unidad.toLowerCase()})
+                          </span>
+                        )}
+                      </Label>
                       <Input
                         id="cantidad"
                         type="number"
                         step="0.01"
+                        min="0"
                         required
                         value={formData.cantidad}
                         onChange={(e) =>
                           setFormData({ ...formData, cantidad: e.target.value })
                         }
+                        className={
+                          formData.cantidad &&
+                          Number.parseFloat(formData.cantidad) <= 0
+                            ? "border-red-300"
+                            : ""
+                        }
+                        aria-label={`Cantidad en ${formData.unidad.toLowerCase()}`}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="unidad">Unidad</Label>
+                      <Label htmlFor="unidad">
+                        Unidad
+                        {formData.productoId && (
+                          <span className="text-xs text-muted-foreground ml-2">
+                            (auto-seleccionada)
+                          </span>
+                        )}
+                      </Label>
                       <Select
                         value={formData.unidad}
-                        onValueChange={(value) =>
-                          setFormData({ ...formData, unidad: value })
-                        }
+                        onValueChange={handleUnidadChange}
+                        disabled={!!formData.productoId}
                       >
                         <SelectTrigger id="unidad">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="gr">gr</SelectItem>
-                          <SelectItem value="ml">ml</SelectItem>
-                          <SelectItem value="pz">pz</SelectItem>
-                          <SelectItem value="kg">kg</SelectItem>
-                          <SelectItem value="lt">lt</SelectItem>
+                          {unidadesDisponibles.map((unidad) => (
+                            <SelectItem key={unidad.value} value={unidad.value}>
+                              {unidad.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
+                      {formData.productoId && (
+                        <p className="text-xs text-muted-foreground">
+                          La unidad se basa en el producto seleccionado
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex gap-2 mt-4">
                     <Button type="submit" variant="default" size="sm">
-                      Agregar
+                      <Plus className="w-4 h-4 mr-2" />
+                      Agregar Ingrediente
                     </Button>
                     <Button
                       type="button"
-                      onClick={() => setShowForm(false)}
+                      onClick={() => {
+                        setShowForm(false);
+                        setFormData({
+                          productoId: "",
+                          cantidad: "",
+                          unidad: "GR",
+                        });
+                        setError("");
+                      }}
                       variant="outline"
                       size="sm"
                     >
@@ -250,10 +381,10 @@ export default function IngredientesModal({
               ingredientes.map((ing) => (
                 <Card key={ing.id}>
                   <CardContent className="flex items-center justify-between p-4">
-                    <div>
+                    <div className="flex-1">
                       <p className="font-semibold">{ing.producto.nombre}</p>
                       <p className="text-sm text-muted-foreground">
-                        {ing.cantidad} {ing.unidad}
+                        {ing.cantidad.toFixed(2)} {ing.unidad.toLowerCase()}
                       </p>
                     </div>
                     <Button
@@ -261,6 +392,7 @@ export default function IngredientesModal({
                       onClick={() => handleDeleteIngrediente(ing.id)}
                       variant="destructive"
                       size="sm"
+                      aria-label={`Eliminar ingrediente ${ing.producto.nombre}`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -272,8 +404,8 @@ export default function IngredientesModal({
         </div>
 
         <DialogFooter>
-          <Button onClick={onClose} variant="default" className="w-full">
-            Cerrar
+          <Button onClick={onClose} variant="outline" className="w-full">
+            Cerrar Gestión de Ingredientes
           </Button>
         </DialogFooter>
       </DialogContent>

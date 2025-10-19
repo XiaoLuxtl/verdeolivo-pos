@@ -17,6 +17,13 @@ enum CategoriaReceta {
   OTRO
 }
 
+// Enum para unidades de medida
+enum UnidadMedida {
+  GR  @map("gr")
+  ML  @map("ml")
+  PZ  @map("pz")
+}
+
 model Producto {
   id             Int      @id @default(autoincrement())
   sku            String   @unique
@@ -26,7 +33,7 @@ model Producto {
   precioUnitario Float
   peso           Float?
   precioPorUnidad Float? // Precio por gramo, ml, o pieza (calculado automáticamente)
-  unidad         String // gr, ml, pz
+  unidad         UnidadMedida @default(GR) // Unidad de medida
   descripcion    String?
   stockMinimo    Float?   @default(5)
   descripcionUmbral String?
@@ -42,7 +49,7 @@ model Inventario {
   id             Int      @id @default(autoincrement())
   productoId     Int      @unique
   cantidadActual Float    @default(0)
-  unidad         String
+  unidad         UnidadMedida
   actualizadoEn  DateTime @updatedAt
 
   producto Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
@@ -107,7 +114,7 @@ model RecetaIngrediente {
   recetaId   Int
   productoId Int
   cantidad   Float
-  unidad     String
+  unidad     UnidadMedida
 
   receta   Receta   @relation(fields: [recetaId], references: [id], onDelete: Cascade)
   producto Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
