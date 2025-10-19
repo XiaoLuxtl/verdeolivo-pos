@@ -1,17 +1,107 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import {
   Package,
   Warehouse,
   ChefHat,
   ShoppingCart,
   TrendingUp,
+  TrendingDown,
   Users,
   DollarSign,
+  RefreshCw,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+interface DashboardStats {
+  productos: number;
+  inventarioTotal: number;
+  recetas: number;
+  ventasHoy: number;
+  clientesHoy: number;
+  margenGanancia: number;
+  crecimientoMensual: number;
+}
+
 export default function AdminDashboard() {
+  const [stats, setStats] = useState<DashboardStats>({
+    productos: 0,
+    inventarioTotal: 0,
+    recetas: 0,
+    ventasHoy: 0,
+    clientesHoy: 0,
+    margenGanancia: 0,
+    crecimientoMensual: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
+  const loadStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Obtener datos en paralelo
+      const [productosRes, recetasRes, ventasRes] = await Promise.all([
+        fetch("/api/productos"),
+        fetch("/api/recetas"),
+        fetch("/api/reportes/ventas?periodo=dia"),
+      ]);
+
+      const productos = await productosRes.json();
+      const recetas = await recetasRes.json();
+      const ventasData = await ventasRes.json();
+
+      // Calcular estadísticas
+      const productosCount = productos.length;
+      const inventarioTotal = productos.reduce(
+        (total: number, producto: any) =>
+          total + (producto.inventario?.cantidadActual || 0),
+        0
+      );
+      const recetasCount = recetas.length;
+      const ventasHoy = ventasData.totalVentas || 0;
+      const clientesHoy = ventasData.totalClientes || 0;
+
+      // Calcular margen de ganancia promedio (simplificado)
+      const margenGanancia =
+        productos.length > 0
+          ? productos.reduce((total: number, producto: any) => {
+              const costo = producto.precioUnitario * 0.7; // Asumiendo 70% de costo
+              const ganancia = producto.precioUnitario - costo;
+              return total + (ganancia / producto.precioUnitario) * 100;
+            }, 0) / productos.length
+          : 0;
+
+      // Crecimiento mensual (comparación simplificada)
+      const crecimientoMensual = 12.5; // Placeholder - en producción calcular de datos históricos
+
+      setStats({
+        productos: productosCount,
+        inventarioTotal,
+        recetas: recetasCount,
+        ventasHoy,
+        clientesHoy,
+        margenGanancia: Math.round(margenGanancia),
+        crecimientoMensual,
+      });
+      setLastUpdate(new Date());
+    } catch (err) {
+      console.error("Error al cargar estadísticas:", err);
+      setError("Error al cargar las estadísticas");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -22,17 +112,35 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground mt-2">
             Gestiona tu negocio de manera eficiente
           </p>
+          {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
         </div>
-        <div className="text-right">
-          <p className="text-sm text-muted-foreground">Última actualización</p>
-          <p className="text-sm font-medium">
-            {new Date().toLocaleDateString("es-ES", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadStats}
+            disabled={loading}
+          >
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
+            Actualizar
+          </Button>
+          <div className="text-right">
+            <p className="text-sm text-muted-foreground">
+              Última actualización
+            </p>
+            <p className="text-sm font-medium">
+              {lastUpdate.toLocaleDateString("es-MX", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -44,7 +152,13 @@ export default function AdminDashboard() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">
+              {loading ? (
+                <div className="animate-pulse bg-muted h-8 w-12 rounded"></div>
+              ) : (
+                stats.productos
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
               productos registrados
             </p>
@@ -60,7 +174,13 @@ export default function AdminDashboard() {
             <Warehouse className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">
+              {loading ? (
+                <div className="animate-pulse bg-muted h-8 w-16 rounded"></div>
+              ) : (
+                stats.inventarioTotal.toLocaleString("es-MX")
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
               unidades disponibles
             </p>
@@ -74,7 +194,13 @@ export default function AdminDashboard() {
             <ChefHat className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">
+              {loading ? (
+                <div className="animate-pulse bg-muted h-8 w-12 rounded"></div>
+              ) : (
+                stats.recetas
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">recetas activas</p>
           </CardContent>
         </Card>
@@ -86,7 +212,13 @@ export default function AdminDashboard() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$0</div>
+            <div className="text-2xl font-bold">
+              {loading ? (
+                <div className="animate-pulse bg-muted h-8 w-20 rounded"></div>
+              ) : (
+                `$${stats.ventasHoy.toLocaleString("es-MX")}`
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">ingresos del día</p>
           </CardContent>
         </Card>
@@ -97,12 +229,31 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium flex items-center">
-              <TrendingUp className="h-4 w-4 mr-2" />
+              {stats.crecimientoMensual >= 0 ? (
+                <TrendingUp className="h-4 w-4 mr-2 text-green-600" />
+              ) : (
+                <TrendingDown className="h-4 w-4 mr-2 text-red-600" />
+              )}
               Crecimiento Mensual
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">+12.5%</div>
+            <div
+              className={`text-2xl font-bold ${
+                stats.crecimientoMensual >= 0
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
+              {loading ? (
+                <div className="animate-pulse bg-muted h-8 w-16 rounded"></div>
+              ) : (
+                (() => {
+                  const sign = stats.crecimientoMensual >= 0 ? "+" : "";
+                  return `${sign}${stats.crecimientoMensual}%`;
+                })()
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
               Comparado con el mes anterior
             </p>
@@ -117,7 +268,13 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">
+              {loading ? (
+                <div className="animate-pulse bg-muted h-8 w-12 rounded"></div>
+              ) : (
+                stats.clientesHoy
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">Clientes únicos hoy</p>
           </CardContent>
         </Card>
@@ -130,7 +287,13 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0%</div>
+            <div className="text-2xl font-bold">
+              {loading ? (
+                <div className="animate-pulse bg-muted h-8 w-12 rounded"></div>
+              ) : (
+                `${stats.margenGanancia}%`
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">Promedio por venta</p>
           </CardContent>
         </Card>

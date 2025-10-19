@@ -2,7 +2,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Package, TrendingDown, TrendingUp, Edit3 } from "lucide-react";
+import {
+  Plus,
+  Package,
+  TrendingDown,
+  TrendingUp,
+  Edit3,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import MovimientoForm from "@/components/MovimientoForm";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Loading } from "@/components/ui/loading";
 
 type Producto = {
@@ -48,6 +57,7 @@ export default function InventarioPage() {
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [movimientosOpen, setMovimientosOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState<
     { id: number; nombre: string } | undefined
   >();
@@ -232,133 +242,185 @@ export default function InventarioPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Tabla de inventario */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="w-5 h-5" />
-              Stock Actual
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Producto</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {productosFiltrados.length === 0 ? (
+      {/* Layout principal con sidebar */}
+      <div className="flex gap-6">
+        {/* Tabla de inventario - ocupa el espacio disponible */}
+        <div
+          className={`transition-all duration-300 ease-in-out ${
+            movimientosOpen ? "flex-1 max-w-[calc(100%-320px)]" : "flex-1"
+          }`}
+        >
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="w-5 h-5" />
+                Stock Actual
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell
-                        colSpan={3}
-                        className="text-center py-8 text-muted-foreground"
-                      >
-                        No hay productos
-                      </TableCell>
+                      <TableHead>Producto</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead></TableHead>
                     </TableRow>
-                  ) : (
-                    productosFiltrados.map((producto) => {
-                      const stock = producto.inventario?.cantidadActual || 0;
-                      return (
-                        <TableRow key={producto.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-semibold">{producto.nombre}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {producto.sku}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={getBadgeVariant(stock)}>
-                              {stock} {producto.unidad}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              onClick={() => {
-                                setSelectedProducto({
-                                  id: producto.id,
-                                  nombre: producto.nombre,
-                                });
-                                setShowForm(true);
-                              }}
-                              variant="ghost"
-                              size="sm"
-                              title="Registrar movimiento"
-                            >
-                              <Edit3 className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Historial de movimientos */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>Últimos Movimientos</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-y-auto max-h-[600px]">
-              <div className="p-4 space-y-2">
-                {movimientos.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No hay movimientos registrados
-                  </div>
-                ) : (
-                  movimientos.map((mov) => (
-                    <Card key={mov.id} className="bg-muted/50">
-                      <CardContent className="p-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-2 flex-1">
-                            {getCategoriaIcon(mov.tipo, mov.categoria)}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-sm truncate">
-                                {mov.producto.nombre}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {mov.tipo === "entrada" ? "+" : "-"}
-                                {mov.cantidad} {mov.producto.unidad}
-                              </p>
-                              {mov.notas && (
-                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                  {mov.notas}
+                  </TableHeader>
+                  <TableBody>
+                    {productosFiltrados.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={3}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          No hay productos
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      productosFiltrados.map((producto) => {
+                        const stock = producto.inventario?.cantidadActual || 0;
+                        return (
+                          <TableRow key={producto.id}>
+                            <TableCell>
+                              <div>
+                                <p className="font-semibold">
+                                  {producto.nombre}
                                 </p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <Badge
-                              variant={getCategoriaBadgeVariant(mov.categoria)}
-                              className="text-xs"
-                            >
-                              {mov.categoria}
-                            </Badge>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {formatFecha(mov.fecha)}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
+                                <p className="text-xs text-muted-foreground">
+                                  {producto.sku}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={getBadgeVariant(stock)}>
+                                {stock} {producto.unidad}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                onClick={() => {
+                                  setSelectedProducto({
+                                    id: producto.id,
+                                    nombre: producto.nombre,
+                                  });
+                                  setShowForm(true);
+                                }}
+                                variant="ghost"
+                                size="sm"
+                                title="Registrar movimiento"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar de movimientos */}
+        <div
+          className={`transition-all duration-300 ease-in-out ${
+            movimientosOpen ? "w-80" : "w-12"
+          }`}
+        >
+          <Collapsible open={movimientosOpen} onOpenChange={setMovimientosOpen}>
+            <Card className="shadow-lg h-full">
+              <CardHeader
+                className={`cursor-pointer hover:bg-muted/50 transition-colors ${
+                  movimientosOpen ? "" : "p-2"
+                }`}
+                onClick={() => setMovimientosOpen(!movimientosOpen)}
+              >
+                {movimientosOpen ? (
+                  <CardTitle className="flex items-center justify-between">
+                    Últimos Movimientos
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {movimientos.length}
+                      </Badge>
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </CardTitle>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <Badge variant="secondary" className="text-xs">
+                      {movimientos.length}
+                    </Badge>
+                    <div
+                      className="text-sm font-semibold text-muted-foreground text-center"
+                      style={{
+                        writingMode: "vertical-rl",
+                        textOrientation: "mixed",
+                      }}
+                    >
+                      Últimos Movimientos
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
+              </CardHeader>
+              <CollapsibleContent>
+                <CardContent className="p-0">
+                  <div className="overflow-y-auto max-h-[600px]">
+                    <div className="p-4 space-y-2">
+                      {movimientos.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          No hay movimientos registrados
+                        </div>
+                      ) : (
+                        movimientos.map((mov) => (
+                          <Card key={mov.id} className="bg-muted/50">
+                            <CardContent className="p-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-start gap-2 flex-1">
+                                  {getCategoriaIcon(mov.tipo, mov.categoria)}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-sm truncate">
+                                      {mov.producto.nombre}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {mov.tipo === "entrada" ? "+" : "-"}
+                                      {mov.cantidad} {mov.producto.unidad}
+                                    </p>
+                                    {mov.notas && (
+                                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                        {mov.notas}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <Badge
+                                    variant={getCategoriaBadgeVariant(
+                                      mov.categoria
+                                    )}
+                                    className="text-xs"
+                                  >
+                                    {mov.categoria}
+                                  </Badge>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {formatFecha(mov.fecha)}
+                                  </p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        </div>
       </div>
 
       {/* Formulario de movimiento */}

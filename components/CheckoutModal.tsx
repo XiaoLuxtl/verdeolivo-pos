@@ -56,7 +56,7 @@ export default function CheckoutModal({
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Finalizar Venta</DialogTitle>
         </DialogHeader>

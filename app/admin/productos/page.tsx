@@ -167,7 +167,7 @@ export default function ProductosPage() {
                   <TableHead>Nombre</TableHead>
                   <TableHead>Sabor</TableHead>
                   <TableHead>Precio</TableHead>
-                  <TableHead>Stock</TableHead>
+                  <TableHead>Peso/Cantidad</TableHead>
                   <TableHead>Unidad</TableHead>
                   <TableHead>Proveedor</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
@@ -197,15 +197,29 @@ export default function ProductosPage() {
                         ${producto.precioUnitario.toFixed(2)}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            (producto.inventario?.cantidadActual || 0) > 0
-                              ? "default"
-                              : "destructive"
-                          }
-                        >
-                          {producto.inventario?.cantidadActual || 0}
-                        </Badge>
+                        <div className="space-y-1">
+                          <div className="text-sm">
+                            {producto.peso ? (
+                              <span className="font-medium">
+                                {producto.peso} {producto.unidad}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">
+                                Sin peso
+                              </span>
+                            )}
+                          </div>
+                          {/* <Badge
+                            variant={
+                              (producto.inventario?.cantidadActual || 0) > 0
+                                ? "default"
+                                : "destructive"
+                            }
+                            className="text-xs"
+                          >
+                            Stock: {producto.inventario?.cantidadActual || 0}
+                          </Badge> */}
+                        </div>
                       </TableCell>
                       <TableCell>{producto.unidad}</TableCell>
                       <TableCell>{producto.proveedor || "-"}</TableCell>

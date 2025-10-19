@@ -37,6 +37,7 @@ type Producto = {
   readonly precioUnitario: number;
   readonly unidad: string;
   readonly peso: number;
+  readonly proveedor: string | null;
 };
 
 type DetalleCompra = {
@@ -105,6 +106,20 @@ export default function CompraForm({ open = true, onClose, onSave }: Props) {
       ...nuevosDetalles[index],
       [field]: value,
     };
+
+    // Si se cambió el producto, actualizar automáticamente el proveedor
+    if (field === "productoId" && value) {
+      const productoSeleccionado = productos.find(
+        (p) => p.id.toString() === value
+      );
+      if (productoSeleccionado?.proveedor && !formData.proveedor) {
+        // Solo asignar si el campo proveedor está vacío
+        setFormData((prev) => ({
+          ...prev,
+          proveedor: productoSeleccionado.proveedor!,
+        }));
+      }
+    }
 
     // Calcular subtotal
     if (field === "cantidad" || field === "costoUnitario") {
@@ -187,215 +202,224 @@ export default function CompraForm({ open = true, onClose, onSave }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Registrar Compra</DialogTitle>
           <DialogDescription>
             Completa la información de la compra y agrega los productos.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <Alert variant="error">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+        <div className="flex-1 overflow-y-auto pr-1">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <Alert variant="error">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-          {/* Datos generales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Datos generales */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="fecha">Fecha *</Label>
+                <Input
+                  id="fecha"
+                  type="date"
+                  required
+                  value={formData.fecha}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fecha: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="proveedor">Proveedor *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="proveedor"
+                    type="text"
+                    required
+                    value={formData.proveedor}
+                    onChange={(e) =>
+                      setFormData({ ...formData, proveedor: e.target.value })
+                    }
+                    placeholder="Nombre del proveedor"
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Notas */}
             <div className="space-y-2">
-              <Label htmlFor="fecha">Fecha *</Label>
-              <Input
-                id="fecha"
-                type="date"
-                required
-                value={formData.fecha}
+              <Label htmlFor="notas">Notas</Label>
+              <Textarea
+                id="notas"
+                value={formData.notas}
                 onChange={(e) =>
-                  setFormData({ ...formData, fecha: e.target.value })
+                  setFormData({ ...formData, notas: e.target.value })
                 }
+                placeholder="Notas adicionales..."
+                rows={3}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="proveedor">Proveedor *</Label>
-              <Input
-                id="proveedor"
-                type="text"
-                required
-                value={formData.proveedor}
-                onChange={(e) =>
-                  setFormData({ ...formData, proveedor: e.target.value })
-                }
-                placeholder="Nombre del proveedor"
-              />
-            </div>
-          </div>
+            {/* Detalles de compra */}
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Productos</h3>
+                <Button
+                  type="button"
+                  onClick={agregarDetalle}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Agregar Producto
+                </Button>
+              </div>
 
-          {/* Notas */}
-          <div className="space-y-2">
-            <Label htmlFor="notas">Notas</Label>
-            <Textarea
-              id="notas"
-              value={formData.notas}
-              onChange={(e) =>
-                setFormData({ ...formData, notas: e.target.value })
-              }
-              placeholder="Notas adicionales..."
-              rows={3}
-            />
-          </div>
+              <div className="space-y-3">
+                {detalles.map((detalle, index) => (
+                  <Card key={detalle.id} className="p-4">
+                    <CardContent className="p-0">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                        {/* Producto */}
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor={`producto-${index}`}>Producto</Label>
+                          <Select
+                            value={detalle.productoId}
+                            onValueChange={(value) =>
+                              actualizarDetalle(index, "productoId", value)
+                            }
+                          >
+                            <SelectTrigger id={`producto-${index}`}>
+                              <SelectValue placeholder="Seleccionar producto" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {productos.map((p) => (
+                                <SelectItem key={p.id} value={p.id.toString()}>
+                                  {p.nombre} - {p.sku} ({p.peso}
+                                  {p.unidad}/unidad)
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-          {/* Detalles de compra */}
-          <div className="border-t pt-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Productos</h3>
-              <Button
-                type="button"
-                onClick={agregarDetalle}
-                variant="outline"
-                size="sm"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Agregar Producto
-              </Button>
-            </div>
-
-            <div className="space-y-3">
-              {detalles.map((detalle, index) => (
-                <Card key={detalle.id} className="p-4">
-                  <CardContent className="p-0">
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                      {/* Producto */}
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor={`producto-${index}`}>Producto</Label>
-                        <Select
-                          value={detalle.productoId}
-                          onValueChange={(value) =>
-                            actualizarDetalle(index, "productoId", value)
-                          }
-                        >
-                          <SelectTrigger id={`producto-${index}`}>
-                            <SelectValue placeholder="Seleccionar producto" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {productos.map((p) => (
-                              <SelectItem key={p.id} value={p.id.toString()}>
-                                {p.nombre} - {p.sku} ({p.peso}
-                                {p.unidad}/unidad)
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Cantidad */}
-                      <div className="space-y-2">
-                        <Label htmlFor={`cantidad-${index}`}>
-                          Cantidad (unidades)
-                        </Label>
-                        <Input
-                          id={`cantidad-${index}`}
-                          type="number"
-                          step="0.01"
-                          required
-                          value={detalle.cantidad}
-                          onChange={(e) =>
-                            actualizarDetalle(index, "cantidad", e.target.value)
-                          }
-                        />
-                        {detalle.productoId && detalle.cantidad && (
-                          <p className="text-xs text-muted-foreground">
-                            = {calcularCantidadTotal(detalle)}
-                            {getProductoUnidad(detalle.productoId)} total
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Costo Unitario */}
-                      <div className="space-y-2">
-                        <Label htmlFor={`costo-${index}`}>Costo Unit.</Label>
-                        <Input
-                          id={`costo-${index}`}
-                          type="number"
-                          step="0.01"
-                          required
-                          value={detalle.costoUnitario}
-                          onChange={(e) =>
-                            actualizarDetalle(
-                              index,
-                              "costoUnitario",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </div>
-
-                      {/* Subtotal y eliminar */}
-                      <div className="flex items-end gap-2">
-                        <div className="space-y-2 flex-1">
-                          <Label>Subtotal</Label>
+                        {/* Cantidad */}
+                        <div className="space-y-2">
+                          <Label htmlFor={`cantidad-${index}`}>
+                            Cantidad (unidades)
+                          </Label>
                           <Input
-                            readOnly
-                            value={`$${detalle.subtotal.toFixed(2)}`}
-                            className="bg-muted"
+                            id={`cantidad-${index}`}
+                            type="number"
+                            step="0.01"
+                            required
+                            value={detalle.cantidad}
+                            onChange={(e) =>
+                              actualizarDetalle(
+                                index,
+                                "cantidad",
+                                e.target.value
+                              )
+                            }
+                          />
+                          {detalle.productoId && detalle.cantidad && (
+                            <p className="text-xs text-muted-foreground">
+                              = {calcularCantidadTotal(detalle)}
+                              {getProductoUnidad(detalle.productoId)} total
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Costo Unitario */}
+                        <div className="space-y-2">
+                          <Label htmlFor={`costo-${index}`}>Costo Unit.</Label>
+                          <Input
+                            id={`costo-${index}`}
+                            type="number"
+                            step="0.01"
+                            required
+                            value={detalle.costoUnitario}
+                            onChange={(e) =>
+                              actualizarDetalle(
+                                index,
+                                "costoUnitario",
+                                e.target.value
+                              )
+                            }
                           />
                         </div>
-                        <Button
-                          type="button"
-                          onClick={() => eliminarDetalle(index)}
-                          variant="destructive"
-                          size="icon"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+
+                        {/* Subtotal y eliminar */}
+                        <div className="flex items-end gap-2">
+                          <div className="space-y-2 flex-1">
+                            <Label>Subtotal</Label>
+                            <Input
+                              readOnly
+                              value={`$${detalle.subtotal.toFixed(2)}`}
+                              className="bg-muted"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={() => eliminarDetalle(index)}
+                            variant="destructive"
+                            size="icon"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
 
-              {detalles.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-                  No hay productos agregados. Haz clic en &quot;Agregar
-                  Producto&quot;
-                </div>
-              )}
+                {detalles.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                    No hay productos agregados. Haz clic en &quot;Agregar
+                    Producto&quot;
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Total */}
-          <div className="border-t pt-4">
-            <div className="flex justify-end items-center gap-4">
-              <span className="text-xl font-semibold">Total:</span>
-              <span className="text-3xl font-bold text-primary">
-                ${calcularTotal().toFixed(2)}
-              </span>
+            {/* Total */}
+            <div className="border-t pt-4">
+              <div className="flex justify-end items-center gap-4">
+                <span className="text-xl font-semibold">Total:</span>
+                <span className="text-3xl font-bold text-primary">
+                  ${calcularTotal().toFixed(2)}
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Botones */}
-          <DialogFooter>
-            <Button
-              type="button"
-              onClick={onClose}
-              variant="outline"
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading || detalles.length === 0}>
-              {loading ? (
-                <>
-                  <Loading size="sm" className="mr-2" />
-                  Guardando...
-                </>
-              ) : (
-                "Registrar Compra"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+            {/* Botones */}
+            <DialogFooter className="flex-shrink-0">
+              <Button
+                type="button"
+                onClick={onClose}
+                variant="outline"
+                disabled={loading}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={loading || detalles.length === 0}>
+                {loading ? (
+                  <>
+                    <Loading size="sm" className="mr-2" />
+                    Guardando...
+                  </>
+                ) : (
+                  "Registrar Compra"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

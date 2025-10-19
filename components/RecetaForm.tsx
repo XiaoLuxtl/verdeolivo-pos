@@ -78,7 +78,7 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
             {receta ? "Editar Receta" : "Nueva Receta"}
@@ -149,24 +149,6 @@ export default function RecetaForm({ receta, onClose, onSave }: Props) {
                 💡 Después de crear la receta podrás agregar los ingredientes
                 necesarios
               </span>
-            </div>
-
-            <div className="flex gap-3 justify-end pt-4">
-              <Button
-                type="button"
-                onClick={onClose}
-                variant="ghost"
-                disabled={loading}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" variant="default" disabled={loading}>
-                {loading ? (
-                  <span className="loading loading-spinner"></span>
-                ) : (
-                  submitButtonText
-                )}
-              </Button>
             </div>
           </form>
         </div>

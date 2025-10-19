@@ -198,7 +198,7 @@ export default function POSPage() {
                 className="cursor-pointer transition-all hover:shadow-lg hover:scale-105 overflow-hidden"
                 onClick={() => addToCart(receta)}
               >
-                <div className="h-32 bg-muted flex items-center justify-center">
+                <div className="aspect-square bg-muted flex items-center justify-center">
                   {receta.imagen ? (
                     <img
                       src={receta.imagen}

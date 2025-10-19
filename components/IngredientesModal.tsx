@@ -132,7 +132,7 @@ export default function IngredientesModal({
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Ingredientes</DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">{recetaNombre}</p>
