@@ -4,8 +4,22 @@ import { prisma } from "@/lib/prisma";
 
 function calcularFechas(
   periodo: string,
-  fechaParam?: string | null
+  fechaParam?: string | null,
+  fechaInicio?: string | null,
+  fechaFin?: string | null
 ): { start: Date; end: Date } {
+  if (periodo === "personalizado" && fechaInicio && fechaFin) {
+    // Rango de fechas personalizado
+    const start = new Date(fechaInicio);
+    const end = new Date(fechaFin);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      throw new TypeError("Fechas inválidas. Use formato YYYY-MM-DD");
+    }
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
+
   if (fechaParam) {
     // Fecha específica
     const fecha = new Date(fechaParam);
@@ -176,9 +190,16 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const periodo = searchParams.get("periodo") || "dia";
     const fechaParam = searchParams.get("fecha");
+    const fechaInicio = searchParams.get("fechaInicio");
+    const fechaFin = searchParams.get("fechaFin");
 
     // Calcular fechas según el periodo o fecha específica
-    const { start, end } = calcularFechas(periodo, fechaParam);
+    const { start, end } = calcularFechas(
+      periodo,
+      fechaParam,
+      fechaInicio,
+      fechaFin
+    );
 
     // Query ventas del periodo
     const ventas = await prisma.venta.findMany({

@@ -14,27 +14,38 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const periodo = searchParams.get("periodo") || "mes";
+    const fechaInicioParam = searchParams.get("fechaInicio");
+    const fechaFinParam = searchParams.get("fechaFin");
 
     // Calcular fechas
     const now = new Date();
     let fechaInicio: Date;
 
-    switch (periodo) {
-      case "semana":
-        const diaSemana = now.getDay();
-        const diasDesdeInicio = diaSemana === 0 ? 6 : diaSemana - 1;
-        fechaInicio = new Date(now);
-        fechaInicio.setDate(now.getDate() - diasDesdeInicio);
-        fechaInicio.setHours(0, 0, 0, 0);
-        break;
-      case "mes":
-        fechaInicio = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case "3meses":
-        fechaInicio = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-        break;
-      default:
-        fechaInicio = new Date(now.getFullYear(), now.getMonth(), 1);
+    if (periodo === "personalizado" && fechaInicioParam && fechaFinParam) {
+      fechaInicio = new Date(fechaInicioParam);
+      fechaInicio.setHours(0, 0, 0, 0);
+      if (Number.isNaN(fechaInicio.getTime())) {
+        throw new TypeError("Fecha inicio inválida. Use formato YYYY-MM-DD");
+      }
+    } else {
+      switch (periodo) {
+        case "semana": {
+          const diaSemana = now.getDay();
+          const diasDesdeInicio = diaSemana === 0 ? 6 : diaSemana - 1;
+          fechaInicio = new Date(now);
+          fechaInicio.setDate(now.getDate() - diasDesdeInicio);
+          fechaInicio.setHours(0, 0, 0, 0);
+          break;
+        }
+        case "mes":
+          fechaInicio = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case "3meses":
+          fechaInicio = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+          break;
+        default:
+          fechaInicio = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
     }
 
     // Obtener productos con inventario

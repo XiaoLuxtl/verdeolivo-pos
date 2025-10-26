@@ -4,8 +4,22 @@ import { prisma } from "@/lib/prisma";
 
 function calcularFechas(
   periodo: string,
-  fechaParam?: string | null
+  fechaParam?: string | null,
+  fechaInicio?: string | null,
+  fechaFin?: string | null
 ): { start: Date; end: Date } {
+  if (periodo === "personalizado" && fechaInicio && fechaFin) {
+    // Rango de fechas personalizado
+    const start = new Date(fechaInicio);
+    const end = new Date(fechaFin);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      throw new TypeError("Fechas inválidas. Use formato YYYY-MM-DD");
+    }
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
+
   if (fechaParam) {
     const fecha = new Date(fechaParam);
     if (Number.isNaN(fecha.getTime())) {
@@ -73,8 +87,15 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const periodo = searchParams.get("periodo") || "dia";
     const fecha = searchParams.get("fecha");
+    const fechaInicio = searchParams.get("fechaInicio");
+    const fechaFin = searchParams.get("fechaFin");
 
-    const { start, end } = calcularFechas(periodo, fecha);
+    const { start, end } = calcularFechas(
+      periodo,
+      fecha,
+      fechaInicio,
+      fechaFin
+    );
 
     // Obtener todas las ventas del periodo con detalles completos
     const ventas = await prisma.venta.findMany({
@@ -227,174 +248,134 @@ function generarHTMLReporte(estadisticas: any): string {
     <title>Reporte Detallado - ${periodo.label}</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            margin: 0;
+            padding: 15px;
+            background: #fff;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
             text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
         .header h1 {
             margin: 0;
-            font-size: 2.5em;
-            font-weight: 300;
+            font-size: 18px;
+            font-weight: bold;
         }
         .header p {
-            margin: 10px 0 0 0;
-            opacity: 0.9;
+            margin: 5px 0 0 0;
+            font-size: 11px;
         }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
         }
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        .stat {
+            flex: 1;
+            min-width: 120px;
             text-align: center;
+            padding: 8px;
+            border: 1px solid #ccc;
+            margin: 0 2px;
         }
-        .stat-card h3 {
-            margin: 0 0 10px 0;
-            color: #666;
-            font-size: 0.9em;
+        .stat h3 {
+            margin: 0 0 5px 0;
+            font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .stat-card .value {
-            font-size: 2em;
             font-weight: bold;
-            color: #333;
         }
-        .stat-card .currency {
-            color: #28a745;
+        .stat .value {
+            font-size: 14px;
+            font-weight: bold;
         }
         .section {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
         .section h2 {
-            margin: 0 0 20px 0;
-            color: #333;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            font-weight: bold;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            font-size: 11px;
         }
         th, td {
-            padding: 12px;
+            padding: 6px 4px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #ccc;
         }
         th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #333;
-        }
-        tr:hover {
-            background-color: #f8f9fa;
-        }
-        .venta-row {
-            background-color: #f0f8ff;
-        }
-        .ingrediente-row {
-            background-color: #fff8f0;
-            font-size: 0.9em;
-        }
-        .total-row {
-            background-color: #e8f5e8;
             font-weight: bold;
+            background: #f5f5f5;
         }
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            font-weight: 500;
-        }
-        .badge.descuento {
-            background-color: #dc3545;
-            color: white;
-        }
-        .badge.efectivo {
-            background-color: #28a745;
-            color: white;
-        }
-        .insumos-summary {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
-        .ganancia-card {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 10px;
-            text-align: center;
-            margin: 20px 0;
-        }
-        .ganancia-card .value {
-            font-size: 2.5em;
-            font-weight: bold;
+        .summary {
+            border: 1px solid #000;
+            padding: 10px;
             margin: 10px 0;
         }
+        .summary h2 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .profit {
+            text-align: center;
+            border: 1px solid #000;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .profit .value {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
         @media print {
-            body { background: white; }
-            .header { background: #333 !important; color: white !important; }
+            body { background: white !important; }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>📊 Reporte Detallado</h1>
+        <h1>Reporte Detallado</h1>
         <p>Periodo: ${new Date(periodo.inicio).toLocaleDateString(
           "es-MX"
         )} - ${new Date(periodo.fin).toLocaleDateString("es-MX")}</p>
-        <p>Generado el: ${new Date().toLocaleString("es-MX")}</p>
+        <p>Generado: ${new Date().toLocaleString("es-MX")}</p>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
+    <div class="stats">
+        <div class="stat">
             <h3>Total Ventas</h3>
             <div class="value">${resumen.totalVentas}</div>
         </div>
-        <div class="stat-card">
-            <h3>Ingresos Totales</h3>
-            <div class="value currency">$${resumen.totalIngresos.toFixed(
-              2
-            )}</div>
+        <div class="stat">
+            <h3>Ingresos</h3>
+            <div class="value">$${resumen.totalIngresos.toFixed(2)}</div>
         </div>
-        <div class="stat-card">
-            <h3>Descuentos Aplicados</h3>
+        <div class="stat">
+            <h3>Descuentos</h3>
             <div class="value">$${resumen.totalDescuentos.toFixed(2)}</div>
         </div>
-        <div class="stat-card">
+        <div class="stat">
             <h3>Subtotal</h3>
             <div class="value">$${resumen.subtotal.toFixed(2)}</div>
         </div>
     </div>
 
     <div class="section">
-        <h2>🛒 Ventas Detalladas</h2>
+        <h2>Ventas Detalladas</h2>
         <table>
             <thead>
                 <tr>
@@ -402,16 +383,16 @@ function generarHTMLReporte(estadisticas: any): string {
                     <th>Hora</th>
                     <th>Productos</th>
                     <th>Subtotal</th>
-                    <th>Descuento</th>
+                    <th>Desc.</th>
                     <th>Total</th>
-                    <th>Método</th>
+                    <th>Metodo</th>
                 </tr>
             </thead>
             <tbody>
                 ${ventasDetalladas
                   .map(
                     (venta: any) => `
-                    <tr class="venta-row">
+                    <tr>
                         <td>${new Date(venta.fecha).toLocaleDateString(
                           "es-MX"
                         )}</td>
@@ -421,27 +402,20 @@ function generarHTMLReporte(estadisticas: any): string {
                               .map(
                                 (det: any) => `${det.cantidad}x ${det.receta}`
                               )
-                              .join("<br>")}
-                        </td>
+                              .join("<br>")}</td>
                         <td>$${venta.subtotal.toFixed(2)}</td>
-                        <td>
-                            ${
-                              venta.descuento > 0
-                                ? `<span class="badge descuento">$${venta.descuento.toFixed(
-                                    2
-                                  )}</span>`
-                                : "-"
-                            }
-                        </td>
+                        <td>${
+                          venta.descuento > 0
+                            ? `$${venta.descuento.toFixed(2)}`
+                            : "-"
+                        }</td>
                         <td><strong>$${venta.total.toFixed(2)}</strong></td>
-                        <td><span class="badge efectivo">${
-                          venta.metodoPago || "efectivo"
-                        }</span></td>
+                        <td>${venta.metodoPago || "efectivo"}</td>
                     </tr>
                     ${venta.detalles
                       .map(
                         (det: any) => `
-                        <tr class="ingrediente-row">
+                        <tr style="font-size: 10px; background: #f9f9f9;">
                             <td colspan="7">
                                 <strong>${det.receta}:</strong>
                                 ${det.ingredientes
@@ -466,14 +440,14 @@ function generarHTMLReporte(estadisticas: any): string {
         </table>
     </div>
 
-    <div class="insumos-summary">
-        <h2 style="margin: 0 0 20px 0; color: white;">📦 Insumos Gastados</h2>
-        <table style="color: white;">
+    <div class="summary">
+        <h2>Insumos Gastados</h2>
+        <table>
             <thead>
                 <tr>
-                    <th style="color: white;">Producto</th>
-                    <th style="color: white;">Cantidad Gastada</th>
-                    <th style="color: white;">Costo Total</th>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Costo</th>
                 </tr>
             </thead>
             <tbody>
@@ -492,46 +466,41 @@ function generarHTMLReporte(estadisticas: any): string {
         </table>
     </div>
 
-    <div class="ganancia-card">
-        <h2 style="margin: 0 0 10px 0;">💰 Ganancia Teórica</h2>
+    <div class="profit">
+        <h2>Ganancia Teórica</h2>
         <div class="value">$${gananciaTeorica.toFixed(2)}</div>
-        <p style="margin: 10px 0 0 0; opacity: 0.9;">
-            Ingresos: $${resumen.totalIngresos.toFixed(
-              2
-            )} - Costo insumos: $${Object.values(insumosGastados)
-    .reduce((sum: number, insumo: any) => sum + insumo.costo, 0)
-    .toFixed(2)}
+        <p style="margin: 5px 0 0 0; font-size: 11px;">
+            Ingresos: $${resumen.totalIngresos.toFixed(2)} -
+            Costo insumos: $${Object.values(insumosGastados)
+              .reduce((sum: number, insumo: any) => sum + insumo.costo, 0)
+              .toFixed(2)}
         </p>
     </div>
 
     <div class="section">
-        <h2>📈 Resumen Ejecutivo</h2>
-        <ul>
-            <li><strong>Periodo analizado:</strong> ${new Date(
+        <h2>Resumen</h2>
+        <div style="font-size: 11px; line-height: 1.5;">
+            <p><strong>Periodo:</strong> ${new Date(
               periodo.inicio
             ).toLocaleDateString("es-MX")} - ${new Date(
     periodo.fin
-  ).toLocaleDateString("es-MX")}</li>
-            <li><strong>Ventas realizadas:</strong> ${resumen.totalVentas}</li>
-            <li><strong>Ingresos totales:</strong> $${resumen.totalIngresos.toFixed(
+  ).toLocaleDateString("es-MX")}</p>
+            <p><strong>Ventas:</strong> ${resumen.totalVentas}</p>
+            <p><strong>Ingresos:</strong> $${resumen.totalIngresos.toFixed(
               2
-            )}</li>
-            <li><strong>Descuentos aplicados:</strong> $${resumen.totalDescuentos.toFixed(
+            )}</p>
+            <p><strong>Descuentos:</strong> $${resumen.totalDescuentos.toFixed(
               2
-            )}</li>
-            <li><strong>Costo de insumos:</strong> $${Object.values(
-              insumosGastados
-            )
+            )}</p>
+            <p><strong>Costo insumos:</strong> $${Object.values(insumosGastados)
               .reduce((sum: number, insumo: any) => sum + insumo.costo, 0)
-              .toFixed(2)}</li>
-            <li><strong>Ganancia teórica:</strong> $${gananciaTeorica.toFixed(
-              2
-            )}</li>
-            <li><strong>Margen de ganancia:</strong> ${(
+              .toFixed(2)}</p>
+            <p><strong>Ganancia:</strong> $${gananciaTeorica.toFixed(2)}</p>
+            <p><strong>Margen:</strong> ${(
               (gananciaTeorica / resumen.totalIngresos) *
               100
-            ).toFixed(1)}%</li>
-        </ul>
+            ).toFixed(1)}%</p>
+        </div>
     </div>
 </body>
 </html>`;
