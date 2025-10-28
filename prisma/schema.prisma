@@ -24,20 +24,30 @@ enum UnidadMedida {
   PZ  @map("pz")
 }
 
+// Enum para categorías de producto
+enum CategoriaProducto {
+  ALOE
+  TE @map("TÉ") // Usamos @map para el acento en la base de datos
+  MALTEADA
+  PROTEINA
+  EXTRA
+}
+
 model Producto {
-  id             Int      @id @default(autoincrement())
-  sku            String   @unique
-  nombre         String
-  sabor          String?
-  proveedor      String?
-  precioUnitario Float
-  peso           Float?
-  precioPorUnidad Float? // Precio por gramo, ml, o pieza (calculado automáticamente)
-  unidad         UnidadMedida @default(GR) // Unidad de medida
-  descripcion    String?
-  stockMinimo    Float?   @default(5)
+  id                Int                    @id @default(autoincrement())
+  sku               String                 @unique
+  nombre            String
+  sabor             String?
+  proveedor         String?
+  precioUnitario    Float
+  peso              Float?
+  precioPorUnidad   Float?
+  unidad            UnidadMedida           @default(GR)
+  descripcion       String?
+  stockMinimo       Float?                 @default(5)
   descripcionUmbral String?
-  createdAt      DateTime @default(now())
+  createdAt         DateTime               @default(now())
+  categoria         CategoriaProducto      @default(EXTRA)
 
   inventario         Inventario?
   movimientos        MovimientoInventario[]
@@ -46,20 +56,19 @@ model Producto {
 }
 
 model Inventario {
-  id             Int      @id @default(autoincrement())
-  productoId     Int      @unique
-  cantidadActual Float    @default(0)
+  id             Int          @id @default(autoincrement())
+  productoId     Int          @unique
+  cantidadActual Float        @default(0)
   unidad         UnidadMedida
-  actualizadoEn  DateTime @updatedAt
-
-  producto Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  actualizadoEn  DateTime     @updatedAt
+  producto       Producto     @relation(fields: [productoId], references: [id], onDelete: Cascade)
 }
 
 model MovimientoInventario {
   id            Int      @id @default(autoincrement())
   productoId    Int
-  tipo          String // entrada, salida
-  categoria     String // insumo, venta, merma, ajuste
+  tipo          String
+  categoria     String
   cantidad      Float
   costoUnitario Float?
   fecha         DateTime @default(now())
@@ -67,87 +76,80 @@ model MovimientoInventario {
   notas         String?
   ventaRef      Int?
   motivoMerma   String?
-
-  producto Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
-  venta    Venta?   @relation("VentaMovimientos", fields: [ventaRef], references: [id], onDelete: SetNull)
+  venta         Venta?   @relation("VentaMovimientos", fields: [ventaRef], references: [id], onDelete: SetNull)
+  producto      Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
 
   @@index([categoria, fecha])
 }
 
 model Compra {
-  id        Int      @id @default(autoincrement())
-  fecha     DateTime @default(now())
+  id        Int             @id @default(autoincrement())
+  fecha     DateTime        @default(now())
   proveedor String
   total     Float
   notas     String?
-
-  detalles DetalleCompra[]
+  detalles  DetalleCompra[]
 }
 
 model DetalleCompra {
-  id            Int   @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   compraId      Int
   productoId    Int
   cantidad      Float
   costoUnitario Float
   subtotal      Float
-
-  compra   Compra   @relation(fields: [compraId], references: [id], onDelete: Cascade)
-  producto Producto @relation("ProductoDetalleCompra", fields: [productoId], references: [id], onDelete: Restrict)
+  compra        Compra   @relation(fields: [compraId], references: [id], onDelete: Cascade)
+  producto      Producto @relation("ProductoDetalleCompra", fields: [productoId], references: [id], onDelete: Restrict)
 }
 
 model Receta {
-  id          Int             @id @default(autoincrement())
-  nombre      String
-  categoria   CategoriaReceta @default(OTRO)
-  descripcion String?
-  precioVenta Float
-  imagen      String? // Base64
-  createdAt   DateTime        @default(now())
-
-  ingredientes  RecetaIngrediente[]
+  id            Int                 @id @default(autoincrement())
+  nombre        String
+  categoria     CategoriaReceta     @default(OTRO)
+  descripcion   String?
+  precioVenta   Float
+  imagen        String?
+  createdAt     DateTime            @default(now())
   detallesVenta DetalleVenta[]
+  ingredientes  RecetaIngrediente[]
 }
 
 model RecetaIngrediente {
-  id         Int    @id @default(autoincrement())
+  id         Int          @id @default(autoincrement())
   recetaId   Int
   productoId Int
   cantidad   Float
   unidad     UnidadMedida
-
-  receta   Receta   @relation(fields: [recetaId], references: [id], onDelete: Cascade)
-  producto Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  producto   Producto     @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  receta     Receta       @relation(fields: [recetaId], references: [id], onDelete: Cascade)
 }
 
 model Venta {
-  id                     Int      @id @default(autoincrement())
-  fecha                  DateTime @default(now())
+  id                     Int                    @id @default(autoincrement())
+  fecha                  DateTime               @default(now())
   subtotal               Float
-  descuento              Float    @default(0)
+  descuento              Float                  @default(0)
   tipoDescuento          String?
   valorDescuentoOriginal Float?
   total                  Float
   recibido               Float
   cambio                 Float
-  metodoPago             String   @default("efectivo")
+  metodoPago             String                 @default("efectivo")
   notas                  String?
-
-  detalles   DetalleVenta[]
-  movimientos MovimientoInventario[] @relation("VentaMovimientos")
+  detalles               DetalleVenta[]
+  movimientos            MovimientoInventario[] @relation("VentaMovimientos")
 
   @@index([fecha])
 }
 
 model DetalleVenta {
-  id             Int   @id @default(autoincrement())
+  id             Int     @id @default(autoincrement())
   ventaId        Int
   recetaId       Int
   cantidad       Int
   precioUnitario Float
   subtotal       Float
   movimientoRef  String?
-
-  venta  Venta  @relation(fields: [ventaId], references: [id], onDelete: Cascade)
-  receta Receta @relation(fields: [recetaId], references: [id], onDelete: Cascade)
+  receta         Receta  @relation(fields: [recetaId], references: [id], onDelete: Cascade)
+  venta          Venta   @relation(fields: [ventaId], references: [id], onDelete: Cascade)
 }

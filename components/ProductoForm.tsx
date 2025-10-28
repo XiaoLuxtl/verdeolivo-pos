@@ -26,6 +26,7 @@ export type Producto = {
   sku: string;
   nombre: string;
   sabor: string;
+  categoria: string; // ← Ya está incluido
   proveedor: string;
   precioUnitario: string;
   peso: string;
@@ -48,11 +49,21 @@ const unidadesDisponibles = [
   { value: "PZ", label: "Piezas (pz)" },
 ] as const;
 
+// Categorías disponibles desde el enum de la BD
+const categoriasDisponibles = [
+  { value: "ALOE", label: "Aloe" },
+  { value: "TE", label: "Té" },
+  { value: "MALTEADA", label: "Malteada" },
+  { value: "PROTEINA", label: "Proteína" },
+  { value: "EXTRA", label: "Extra" },
+] as const;
+
 export default function ProductoForm({ producto, onClose, onSave }: Props) {
   const [formData, setFormData] = useState<Producto>({
     sku: "",
     nombre: "",
     sabor: "",
+    categoria: "EXTRA", // ← Valor por defecto
     proveedor: "",
     precioUnitario: "",
     peso: "",
@@ -168,6 +179,28 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
                     setFormData({ ...formData, nombre: e.target.value })
                   }
                 />
+              </div>
+
+              {/* Categoría */}
+              <div className="space-y-2">
+                <Label htmlFor="categoria">Categoría *</Label>
+                <Select
+                  value={formData.categoria}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, categoria: value })
+                  }
+                >
+                  <SelectTrigger id="categoria">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoriasDisponibles.map((categoria) => (
+                      <SelectItem key={categoria.value} value={categoria.value}>
+                        {categoria.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Sabor */}

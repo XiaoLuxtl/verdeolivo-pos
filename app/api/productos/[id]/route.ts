@@ -53,6 +53,7 @@ export async function PUT(
         sku: body.sku,
         nombre: body.nombre,
         sabor: body.sabor || null,
+        categoria: body.categoria, // ← Agregar esta línea
         proveedor: body.proveedor || null,
         precioUnitario: precioUnitarioNum,
         peso: pesoNum,

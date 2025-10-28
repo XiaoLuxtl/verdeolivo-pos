@@ -3,13 +3,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Search, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package, Badge } from "lucide-react";
 import ProductoForm, {
   type Producto as ProductoFormType,
 } from "@/components/ProductoForm"; // ← Importar el tipo
 import DeleteConfirmation from "@/components/DeleteConfirmation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge as BadgeUI } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -27,6 +28,7 @@ type Producto = {
   sku: string;
   nombre: string;
   sabor: string | null;
+  categoria: string;
   proveedor: string | null;
   precioUnitario: number;
   peso: number | null;
@@ -87,6 +89,7 @@ export default function ProductosPage() {
       sku: producto.sku,
       nombre: producto.nombre,
       sabor: producto.sabor || "",
+      categoria: producto.categoria || "EXTRA",
       proveedor: producto.proveedor || "",
       precioUnitario: producto.precioUnitario.toString(),
       peso: producto.peso?.toString() || "",
@@ -171,6 +174,7 @@ export default function ProductosPage() {
                   <TableHead>SKU</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Sabor</TableHead>
+                  <TableHead>Categoría</TableHead>
                   <TableHead>Precio</TableHead>
                   <TableHead>Peso/Cantidad</TableHead>
                   <TableHead>Unidad</TableHead>
@@ -199,6 +203,11 @@ export default function ProductosPage() {
                         {producto.nombre}
                       </TableCell>
                       <TableCell>{producto.sabor || "-"}</TableCell>
+                      <TableCell>
+                        <BadgeUI variant="outline">
+                          {producto.categoria.toLowerCase()}
+                        </BadgeUI>
+                      </TableCell>
                       <TableCell>
                         ${producto.precioUnitario.toFixed(2)}
                       </TableCell>
