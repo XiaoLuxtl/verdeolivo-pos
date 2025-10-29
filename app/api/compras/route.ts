@@ -13,9 +13,10 @@ export async function GET() {
           },
         },
       },
-      orderBy: {
-        fecha: "desc",
-      },
+      orderBy: [
+        { fecha: "desc" }, // Ordena por fecha (precisa)
+        { id: "desc" }, // Desempata usando el ID (el más nuevo siempre tiene el ID más grande)
+      ],
     });
     return NextResponse.json(compras);
   } catch (error) {

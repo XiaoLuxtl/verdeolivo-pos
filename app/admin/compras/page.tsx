@@ -2,21 +2,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Eye, Package, Download, Filter, Search } from "lucide-react";
-import CompraForm from "@/components/CompraForm";
+import { Plus, Download, Filter, Search, Package } from "lucide-react";
+
+// Importaciones de Componentes Reutilizables
+import { CompraForm } from "@/components/forms/CompraForm";
+import DeleteConfirmation from "@/components/DeleteConfirmation"; // Tu componente de validación de texto
+import { ComprasTable } from "@/components/ComprasTable"; // Componente de tabla refactorizado
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Loading } from "@/components/ui/loading";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -25,7 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type Compra = {
+// Definición del Tipo Compra (debe ser exportado si ComprasTable lo necesita)
+export type Compra = {
   id: number;
   fecha: string;
   proveedor: string;
@@ -45,6 +41,11 @@ export default function ComprasPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterProveedor, setFilterProveedor] = useState("all");
 
+  // Estado para la eliminación
+  const [compraToDelete, setCompraToDelete] = useState<number | null>(null);
+
+  // --- LÓGICA DE DATOS Y EFECTOS ---
+
   const fetchCompras = async () => {
     try {
       setLoading(true);
@@ -53,7 +54,8 @@ export default function ComprasPage() {
       setCompras(data);
       setFilteredCompras(data);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error al obtener compras:", error);
+      // Opcional: Mostrar un mensaje de error al usuario
     } finally {
       setLoading(false);
     }
@@ -83,6 +85,33 @@ export default function ComprasPage() {
 
     setFilteredCompras(result);
   }, [searchTerm, filterProveedor, compras]);
+
+  // --- LÓGICA DE ELIMINACIÓN ---
+
+  const handleDeleteCompra = async () => {
+    if (!compraToDelete) {
+      // Debería ser capturado por el error si no hay ID, pero previene errores TS/lógicos
+      throw new Error("ID de compra no definido para eliminar.");
+    }
+
+    const response = await fetch(`/api/compras/${compraToDelete}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      // Lanza un error para que el modal de confirmación lo capture y lo muestre
+      throw new Error(
+        errorData.error ||
+          "Fallo al eliminar la compra y revertir el inventario."
+      );
+    }
+
+    // Si tiene éxito, actualiza la lista
+    await fetchCompras();
+  };
+
+  // --- LÓGICA DE ESTADÍSTICAS Y EXPORTACIÓN ---
 
   const proveedoresUnicos = [...new Set(compras.map((c) => c.proveedor))];
   const totalGeneral = compras.reduce((sum, c) => sum + c.total, 0);
@@ -118,6 +147,14 @@ export default function ComprasPage() {
     link.download = `compras-${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
   };
+
+  // Lógica para manejar la visualización de detalles (placeholder)
+  const handleViewDetails = (compra: Compra) => {
+    console.log(`Ver detalles de la Compra #${compra.id}`);
+    // Aquí se abriría un modal o se navegaría a una página de detalle
+  };
+
+  // --- RENDERIZADO ---
 
   if (loading) {
     return (
@@ -158,6 +195,7 @@ export default function ComprasPage() {
 
       {/* Estadísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Card Total Compras */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Compras</CardTitle>
@@ -168,10 +206,11 @@ export default function ComprasPage() {
             <p className="text-xs text-muted-foreground">Compras registradas</p>
           </CardContent>
         </Card>
+        {/* Card Este Mes */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Este Mes</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
+            <Download className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -182,6 +221,7 @@ export default function ComprasPage() {
             </p>
           </CardContent>
         </Card>
+        {/* Card Total General */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total General</CardTitle>
@@ -194,6 +234,7 @@ export default function ComprasPage() {
             <p className="text-xs text-muted-foreground">Inversión total</p>
           </CardContent>
         </Card>
+        {/* Card Proveedores */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Proveedores</CardTitle>
@@ -249,92 +290,47 @@ export default function ComprasPage() {
           </CardContent>
         </Card>
 
-        {/* Tabla */}
+        {/* Tabla de Compras Refactorizada */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle>Lista de Compras ({filteredCompras.length})</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Proveedor</TableHead>
-                  <TableHead>Productos</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCompras.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-center py-12 text-muted-foreground"
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Package className="h-8 w-8 opacity-50" />
-                        <span className="text-sm">
-                          {compras.length === 0
-                            ? "No hay compras registradas"
-                            : "No se encontraron resultados para tu búsqueda"}
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredCompras.map((compra) => (
-                    <TableRow
-                      key={compra.id}
-                      className="group hover:bg-muted/50"
-                    >
-                      <TableCell className="font-mono font-medium">
-                        #{compra.id}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(compra.fecha).toLocaleDateString("es-MX", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {compra.proveedor}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className="bg-primary/10 text-primary"
-                        >
-                          {compra.detalles.length}{" "}
-                          {compra.detalles.length === 1 ? "item" : "items"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-semibold text-green-600 dark:text-green-400">
-                        ${compra.total.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span className="sr-only">Ver detalles</span>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            {filteredCompras.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <div className="flex flex-col items-center gap-2">
+                  <Package className="h-8 w-8 opacity-50" />
+                  <span className="text-sm">
+                    {compras.length === 0
+                      ? "No hay compras registradas"
+                      : "No se encontraron resultados para tu búsqueda"}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <ComprasTable
+                compras={filteredCompras}
+                onViewDetails={handleViewDetails}
+                onDelete={setCompraToDelete} // Pasa el setter para abrir el modal de borrado
+              />
+            )}
           </CardContent>
         </Card>
       </div>
 
       {showForm && (
         <CompraForm onClose={() => setShowForm(false)} onSave={fetchCompras} />
+      )}
+
+      {/* Modal de confirmación de borrado (Usando tu componente) */}
+      {compraToDelete !== null && (
+        <DeleteConfirmation
+          title={`Eliminar Compra #${compraToDelete}`}
+          message="Esta acción es irreversible y ANULARÁ el movimiento de inventario asociado a esta compra, RESTANDO la cantidad de productos de tu stock. Debes escribir 'ELIMINAR' para confirmar."
+          confirmText="ELIMINAR"
+          onConfirm={handleDeleteCompra} // Lógica que hace el fetch DELETE
+          onCancel={() => setCompraToDelete(null)} // Función para cerrar el modal
+        />
       )}
     </div>
   );
