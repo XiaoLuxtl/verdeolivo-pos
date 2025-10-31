@@ -1,4 +1,4 @@
-// components/ProductoSearchSelect.tsx
+// components/forms/CompraForm/ProductoSearchSelect.tsx
 "use client";
 
 import { useState } from "react";
@@ -18,19 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-
-// --- INTERFACES --- (Alinea con types.ts del padre; agrega categoria si falta allí)
-
-interface Producto {
-  readonly id: number;
-  readonly nombre: string;
-  readonly sku: string;
-  readonly categoria: string;
-  readonly precioUnitario: number;
-  readonly unidad: string;
-  readonly peso: number | null;
-  readonly proveedor: string | null;
-}
+import { Producto, UnidadMedida } from "@/types";
 
 interface ProductoSearchSelectProps {
   productos: Producto[];

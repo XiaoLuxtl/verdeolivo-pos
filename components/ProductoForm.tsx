@@ -1,3 +1,5 @@
+// ProductoForm.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -20,50 +22,54 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-export type Producto = {
-  id?: number;
-  sku: string;
-  nombre: string;
-  sabor: string;
-  categoria: string; // ← Ya está incluido
-  proveedor: string;
-  precioUnitario: string;
-  peso: string;
-  precioPorUnidad: string;
-  unidad: string;
-  descripcion: string;
-  stockMinimo: string;
-  descripcionUmbral: string;
-};
+import { Loading } from "./ui/loading";
+import { Producto, ProductoFormData } from "@/types";
 
 type Props = {
-  readonly producto?: Producto | null;
+  readonly producto?: {
+    id: number;
+    sku: string;
+    nombre: string;
+    sabor: string | null;
+    categoria: string;
+    proveedor: string | null;
+    precioUnitario: number;
+    peso: number | null;
+    precioPorUnidad: number | null;
+    unidad: string;
+    descripcion: string | null;
+    stockMinimo: number;
+    descripcionUmbral: string | null;
+  } | null;
   readonly onClose: () => void;
   readonly onSave: () => void;
 };
 
+// 💡 Unidades actualizadas con KG y L
 const unidadesDisponibles = [
   { value: "GR", label: "Gramos (gr)" },
   { value: "ML", label: "Mililitros (ml)" },
   { value: "PZ", label: "Piezas (pz)" },
+  { value: "KG", label: "Kilogramos (kg)" },
+  { value: "L", label: "Litros (L)" },
 ] as const;
 
-// Categorías disponibles desde el enum de la BD
+// 💡 Categorías actualizadas con INSUMO_PESO
 const categoriasDisponibles = [
   { value: "ALOE", label: "Aloe" },
   { value: "TE", label: "Té" },
   { value: "MALTEADA", label: "Malteada" },
   { value: "PROTEINA", label: "Proteína" },
-  { value: "EXTRA", label: "Extra" },
+  { value: "EXTRA", label: "Extra (Pieza: Pastillas, Saborizantes)" },
+  { value: "INSUMO_PESO", label: "Insumo por Peso (Fruta, Avena)" }, // ¡NUEVA!
 ] as const;
 
 export default function ProductoForm({ producto, onClose, onSave }: Props) {
-  const [formData, setFormData] = useState<Producto>({
+  const [formData, setFormData] = useState<ProductoFormData>({
     sku: "",
     nombre: "",
     sabor: "",
-    categoria: "EXTRA", // ← Valor por defecto
+    categoria: "EXTRA",
     proveedor: "",
     precioUnitario: "",
     peso: "",
@@ -76,30 +82,114 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // 💡 Nuevo estado para guardar el precio de referencia (Precio por Kilo/Litro)
+  // Esto evita sobrescribir el campo precioUnitario de formData con el costo total
+  const [referenciaPrecio, setReferenciaPrecio] = useState("");
+
   useEffect(() => {
     if (producto) {
-      setFormData(producto);
+      // Convertir el producto al formato de formulario (strings)
+      const formDataConverted: ProductoFormData = {
+        sku: producto.sku,
+        nombre: producto.nombre,
+        sabor: producto.sabor || "",
+        categoria: producto.categoria,
+        proveedor: producto.proveedor || "",
+        precioUnitario: producto.precioUnitario?.toString() || "",
+        peso: producto.peso?.toString() || "",
+        precioPorUnidad: producto.precioPorUnidad?.toString() || "",
+        unidad: producto.unidad,
+        descripcion: producto.descripcion || "",
+        stockMinimo: producto.stockMinimo?.toString() || "",
+        descripcionUmbral: producto.descripcionUmbral || "",
+      };
+
+      // Al editar, si es INSUMO_PESO, hay que inicializar el campo referenciaPrecio
+      if (producto.categoria === "INSUMO_PESO") {
+        // En este caso, el producto YA TIENE un precioPorUnidad (costo por gramo/ml).
+        // Debemos hacer el cálculo inverso para mostrar el costo por KG/L.
+        const precioBase = parseFloat(
+          producto.precioPorUnidad?.toString() || "0"
+        );
+        let factorConversion = 1;
+
+        if (producto.unidad === "KG") factorConversion = 1000;
+        else if (producto.unidad === "L") factorConversion = 1000;
+
+        // El precio de referencia (por unidad grande)
+        const precioRef = precioBase * factorConversion;
+        setReferenciaPrecio(precioRef.toFixed(2));
+      }
+      setFormData(formDataConverted);
     }
   }, [producto]);
 
-  // Calcular precio por unidad automáticamente
+  // 💡 Lógica de Cálculo Unificada (Conversión y Costo Total)
   useEffect(() => {
-    const precioUnitario = parseFloat(formData.precioUnitario) || 0;
+    const costoRef = parseFloat(referenciaPrecio) || 0;
     const peso = parseFloat(formData.peso) || 0;
+    const unidad = formData.unidad;
+    const categoria = formData.categoria;
 
-    if (precioUnitario > 0) {
-      const precioPorUnidad = peso > 0 ? precioUnitario / peso : precioUnitario;
-      setFormData((prev) => ({
-        ...prev,
-        precioPorUnidad: precioPorUnidad.toFixed(4),
-      }));
+    if (categoria === "INSUMO_PESO") {
+      // 1. Lógica para INSUMO_PESO (Necesita Conversión y Costo Total Estimado)
+      if (costoRef > 0) {
+        let factorConversion = 1;
+
+        if (unidad === "KG") factorConversion = 1000;
+        else if (unidad === "L") factorConversion = 1000;
+
+        // Costo por Unidad Base (GR/ML)
+        const precioPorUnidadBase = costoRef / factorConversion;
+
+        // Precio Total de Compra Estimado (Esto va a precioUnitario)
+        // Usamos el factor de conversión para calcular el costo total de la cantidad comprada (peso)
+        // Ejemplo: Compré 0.6 KG a $100/KG -> Costo Total = 100 * 0.6 = $60
+        const precioTotalEstimado = costoRef * peso;
+
+        setFormData((prev) => ({
+          ...prev,
+          // precioPorUnidad guarda el costo por GR/ML (el que va al inventario)
+          precioPorUnidad: precioPorUnidadBase.toFixed(4),
+          // precioUnitario guarda el costo total de esta compra
+          precioUnitario: precioTotalEstimado.toFixed(2),
+        }));
+      } else {
+        // Si no hay precio de referencia, limpiamos
+        setFormData((prev) => ({
+          ...prev,
+          precioPorUnidad: "",
+          precioUnitario: "",
+        }));
+      }
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        precioPorUnidad: "",
-      }));
+      // 2. Lógica para EXTRA/Otros (Cálculo Simple)
+      const precioUnitario = parseFloat(formData.precioUnitario) || 0;
+
+      if (precioUnitario > 0) {
+        // Cálculo simple: Precio Total de Compra / Cantidad Comprada
+        const precioPorUnidad =
+          peso > 0 ? precioUnitario / peso : precioUnitario;
+        setFormData((prev) => ({
+          ...prev,
+          // precioPorUnidad es el costo de la pieza/unidad
+          precioPorUnidad: precioPorUnidad.toFixed(4),
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          precioPorUnidad: "",
+        }));
+      }
     }
-  }, [formData.precioUnitario, formData.peso]);
+    // Añadimos dependencia para el cambio de unidad, categoría, y el nuevo estado referenciaPrecio
+  }, [
+    formData.peso,
+    formData.unidad,
+    formData.categoria,
+    referenciaPrecio,
+    formData.precioUnitario,
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,6 +206,7 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
+        // 💡 NOTA: Enviamos formData, que ya tiene el Costo Total en precioUnitario
         body: JSON.stringify(formData),
       });
 
@@ -135,6 +226,9 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
 
   const submitButtonText = producto?.id ? "Actualizar" : "Crear";
 
+  // Condicionales para las etiquetas
+  const isInsumoPeso = formData.categoria === "INSUMO_PESO";
+
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
@@ -144,7 +238,7 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto pr-2">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert variant="error">
@@ -153,7 +247,7 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* SKU */}
+              {/* SKU & Nombre (Se mantienen igual) */}
               <div className="space-y-2">
                 <Label htmlFor="sku">SKU *</Label>
                 <Input
@@ -167,7 +261,6 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
                 />
               </div>
 
-              {/* Nombre */}
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre *</Label>
                 <Input
@@ -181,7 +274,7 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
                 />
               </div>
 
-              {/* Categoría */}
+              {/* Categoría (Actualizada) */}
               <div className="space-y-2">
                 <Label htmlFor="categoria">Categoría *</Label>
                 <Select
@@ -229,24 +322,31 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
                 />
               </div>
 
-              {/* Precio Unitario */}
-              <div className="space-y-2">
-                <Label htmlFor="precioUnitario">Precio Unitario *</Label>
-                <Input
-                  id="precioUnitario"
-                  type="number"
-                  step="0.01"
-                  required
-                  value={formData.precioUnitario}
-                  onChange={(e) =>
-                    setFormData({ ...formData, precioUnitario: e.target.value })
-                  }
-                />
-              </div>
+              {/* 💡 CAMPO DE REFERENCIA: Solo se muestra para INSUMO_PESO */}
+              {isInsumoPeso && (
+                <div className="space-y-2">
+                  <Label htmlFor="referenciaPrecio">
+                    Costo Referencia (por Kilo o Litro) *
+                  </Label>
+                  <Input
+                    id="referenciaPrecio"
+                    type="number"
+                    step="0.01"
+                    required
+                    value={referenciaPrecio}
+                    onChange={(e) => setReferenciaPrecio(e.target.value)}
+                  />
+                  <p className="text-xs text-blue-500">
+                    Precio unitario del mercado (ej: $25.00/KG de plátano).
+                  </p>
+                </div>
+              )}
 
-              {/* Peso */}
+              {/* 💡 PESO/CANTIDAD: Se usa diferente según la categoría */}
               <div className="space-y-2">
-                <Label htmlFor="peso">Peso/Cantidad</Label>
+                <Label htmlFor="peso">
+                  {isInsumoPeso ? "Peso Comprado (en KG o L)" : "Peso/Cantidad"}
+                </Label>
                 <Input
                   id="peso"
                   type="number"
@@ -256,11 +356,47 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
                     setFormData({ ...formData, peso: e.target.value })
                   }
                 />
+                {isInsumoPeso && (
+                  <p className="text-xs text-blue-500">
+                    La cantidad real que compraste (ej: 0.6 si fueron 600g).
+                  </p>
+                )}
               </div>
 
-              {/* Unidad */}
+              {/* 💡 PRECIO UNITARIO (Costo Total o Precio por Pieza) */}
               <div className="space-y-2">
-                <Label htmlFor="unidad">Unidad *</Label>
+                <Label htmlFor="precioUnitario">
+                  {isInsumoPeso
+                    ? "Precio Total de Compra Estimado (Editable) *"
+                    : "Precio Total de Compra/Costo por Pieza *"}
+                </Label>
+                <Input
+                  id="precioUnitario"
+                  type="number"
+                  step="0.01"
+                  required
+                  value={formData.precioUnitario}
+                  // En INSUMO_PESO, el usuario puede ajustar el precio calculado
+                  // En EXTRA, el usuario ingresa el costo total de la compra o de la pieza.
+                  onChange={(e) => {
+                    setFormData({
+                      ...formData,
+                      precioUnitario: e.target.value,
+                    });
+                  }}
+                  className={isInsumoPeso ? "bg-yellow-50/50 font-bold" : ""}
+                />
+                {isInsumoPeso && (
+                  <p className="text-xs text-orange-500">
+                    El sistema calculó este costo total (Referencia * Peso).
+                    Ajústalo al costo real de tu ticket ($24.00).
+                  </p>
+                )}
+              </div>
+
+              {/* 💡 UNIDAD DE ALMACENAMIENTO (Ahora incluye KG y L) */}
+              <div className="space-y-2">
+                <Label htmlFor="unidad">Unidad de Almacenamiento *</Label>
                 <Select
                   value={formData.unidad}
                   onValueChange={(value) =>
@@ -278,12 +414,18 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
                     ))}
                   </SelectContent>
                 </Select>
+                {isInsumoPeso && (
+                  <p className="text-xs text-orange-500">
+                    Para **INSUMO_PESO** usa **KG** o **L**. Esto define la
+                    referencia de costo.
+                  </p>
+                )}
               </div>
 
               {/* Precio por Unidad (calculado automáticamente) */}
               <div className="space-y-2">
                 <Label htmlFor="precioPorUnidad">
-                  Precio por {formData.unidad}
+                  Costo por Unidad Base (GR, ML o PZ)
                 </Label>
                 <Input
                   id="precioPorUnidad"
@@ -294,7 +436,8 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
                   className="bg-gray-50"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Calculado automáticamente: Precio Unitario ÷ Peso/Cantidad
+                  Costo que se usará en las recetas. En INSUMO_PESO es por
+                  Gramo/Mililitro.
                 </p>
               </div>
             </div>
@@ -312,7 +455,7 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
               />
             </div>
 
-            {/* Configuración de Stock */}
+            {/* Configuración de Stock (Se mantiene igual) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
               <div className="space-y-2">
                 <Label
@@ -381,13 +524,18 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
               disabled={loading}
               onClick={handleSubmit}
             >
+              {" "}
               {loading ? (
-                <span className="loading loading-spinner"></span>
+                // 💡 CORRECCIÓN DE ESTILO: Usar el componente <Loading /> de shadcn
+                <>
+                  <Loading size="sm" className="mr-2" />
+                  Guardando...{" "}
+                </>
               ) : (
                 submitButtonText
-              )}
-            </Button>
-          </div>
+              )}{" "}
+            </Button>{" "}
+          </div>{" "}
         </DialogFooter>
       </DialogContent>
     </Dialog>

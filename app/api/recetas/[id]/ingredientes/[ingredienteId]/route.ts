@@ -1,3 +1,5 @@
+// app/api/recetas/[id]/ingredientes/[ingredienteId]/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 

@@ -1,3 +1,5 @@
+// RecetaForm.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,24 +16,16 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-type Receta = {
-  id?: number;
-  nombre: string;
-  categoria: string;
-  descripcion: string;
-  precioVenta: string;
-  imagen: string | null;
-};
+import { RecetaFormData } from "@/types";
 
 type Props = {
-  readonly receta?: Receta;
+  readonly receta?: RecetaFormData;
   readonly onClose: () => void;
   readonly onSave: () => void;
 };
 
 export default function RecetaForm({ receta, onClose, onSave }: Props) {
-  const [formData, setFormData] = useState<Receta>({
+  const [formData, setFormData] = useState<RecetaFormData>({
     nombre: "",
     categoria: "OTRO",
     descripcion: "",

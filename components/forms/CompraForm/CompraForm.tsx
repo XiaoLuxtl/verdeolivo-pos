@@ -18,7 +18,7 @@ import { Loading } from "@/components/ui/loading";
 import { ProductoSearchSelect } from "./ProductoSearchSelect";
 import { DetalleCompraCard } from "./DetalleCompraCard";
 import { useCompraForm } from "./useCompraForm";
-import { CompraFormProps } from "./types";
+import { CompraFormProps } from "@/types";
 
 export function CompraForm({ open = true, onClose, onSave }: CompraFormProps) {
   const {

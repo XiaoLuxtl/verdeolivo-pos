@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, List, Search, ChefHat } from "lucide-react";
 import RecetaForm from "@/components/RecetaForm";
-import IngredientesModal from "@/components/IngredientesModal";
+import IngredientesModal from "@/components/recetas/ingredientes/IngredientesModal";
 import DeleteConfirmation from "@/components/DeleteConfirmation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

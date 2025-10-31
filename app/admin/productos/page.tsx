@@ -3,10 +3,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Search, Package, Badge } from "lucide-react";
-import ProductoForm, {
-  type Producto as ProductoFormType,
-} from "@/components/ProductoForm"; // ← Importar el tipo
+import { Plus, Pencil, Trash2, Search, Package } from "lucide-react";
+import ProductoForm from "@/components/ProductoForm";
 import DeleteConfirmation from "@/components/DeleteConfirmation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,16 +41,35 @@ type Producto = {
   } | null;
 };
 
+type ProductoDB = {
+  id: number;
+  sku: string;
+  nombre: string;
+  sabor: string | null;
+  categoria: string;
+  proveedor: string | null;
+  precioUnitario: number; // <-- number
+  peso: number | null; // <-- number | null
+  precioPorUnidad: number | null; // <-- number | null
+  unidad: string;
+  descripcion: string | null;
+  stockMinimo: number; // <-- number
+  descripcionUmbral: string | null;
+  inventario: {
+    cantidadActual: number;
+    unidad: string;
+  } | null;
+};
+
 export default function ProductosPage() {
-  const [productos, setProductos] = useState<Producto[]>([]);
-  const [filteredProductos, setFilteredProductos] = useState<Producto[]>([]);
+  const [productos, setProductos] = useState<ProductoDB[]>([]);
+  const [filteredProductos, setFilteredProductos] = useState<ProductoDB[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [selectedProducto, setSelectedProducto] =
-    useState<ProductoFormType | null>(null); // ← Usar el tipo importado
+  const [selectedProducto, setSelectedProducto] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [productoToDelete, setProductoToDelete] = useState<Producto | null>(
+  const [productoToDelete, setProductoToDelete] = useState<ProductoDB | null>(
     null
   );
 
@@ -83,14 +100,15 @@ export default function ProductosPage() {
     setFilteredProductos(filtered);
   }, [searchTerm, productos]);
 
-  const handleEdit = (producto: Producto) => {
+  const handleEdit = (producto: ProductoDB) => {
+    // <-- Ahora recibe ProductoDB
     setSelectedProducto({
       id: producto.id,
       sku: producto.sku,
       nombre: producto.nombre,
       sabor: producto.sabor || "",
       categoria: producto.categoria || "EXTRA",
-      proveedor: producto.proveedor || "",
+      proveedor: producto.proveedor || "", // ✅ CONVERSIÓN DE NUMBER/NULL A STRING
       precioUnitario: producto.precioUnitario.toString(),
       peso: producto.peso?.toString() || "",
       precioPorUnidad: producto.precioPorUnidad?.toString() || "",

@@ -8,15 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-type ReporteInventario = {
-  productosMasMovidos: Array<{
-    nombre: string;
-    movimientos: number;
-    entradas: number;
-    salidas: number;
-  }>;
-};
+import { ReporteInventario } from "@/types";
 
 interface ProductosMovidosTableProps {
   reporteInventario: ReporteInventario | null;

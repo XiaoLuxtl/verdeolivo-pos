@@ -28,6 +28,7 @@ export async function GET() {
 }
 
 // POST - Crear venta con descuentos y deducción automática de stock
+// POST - Crear venta con descuentos y deducción automática de stock (MODIFICADO)
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -42,12 +43,31 @@ export async function POST(request: Request) {
 
     // Calcular subtotal
     let subtotal = 0;
+    // Debemos obtener la receta con los ingredientes para poder sumar el costo base y obtener el costo total de la venta
+    const detallesVentaConCostos: any[] = [];
+
     for (const detalle of detalles) {
       const receta = await prisma.receta.findUnique({
         where: { id: Number.parseInt(detalle.recetaId) },
+        include: { ingredientes: true }, // Incluimos ingredientes para el costo
       });
+
       if (!receta) throw new Error(`Receta ${detalle.recetaId} no encontrada`);
+
       subtotal += receta.precioVenta * Number.parseInt(detalle.cantidad);
+
+      // 💡 PRE-CÁLCULO DEL COSTO DE VENTA (COSTO DE MATERIA PRIMA CONSUMIDA)
+      // Calculamos el costo total de la materia prima por cada unidad de receta vendida
+      const costoMateriaPrimaUnitario = receta.ingredientes.reduce(
+        (sum, ingrediente) => sum + (ingrediente.costoUnitario || 0),
+        0
+      );
+
+      detallesVentaConCostos.push({
+        ...detalle,
+        receta,
+        costoMateriaPrimaUnitario,
+      });
     }
 
     // Calcular descuento
@@ -91,45 +111,50 @@ export async function POST(request: Request) {
       });
 
       // 2. Procesar cada detalle (receta vendida)
-      for (const detalle of detalles) {
-        const receta = await tx.receta.findUnique({
-          where: { id: Number.parseInt(detalle.recetaId) },
-        });
-        if (!receta)
-          throw new Error(`Receta ${detalle.recetaId} no encontrada`);
+      for (const detalleConCosto of detallesVentaConCostos) {
+        const { receta, cantidad, costoMateriaPrimaUnitario } = detalleConCosto;
+        const cantidadVendida = Number.parseInt(cantidad);
 
         // Crear detalle de venta
         await tx.detalleVenta.create({
           data: {
             ventaId: nuevaVenta.id,
-            recetaId: Number.parseInt(detalle.recetaId),
-            cantidad: Number.parseInt(detalle.cantidad),
+            recetaId: receta.id,
+            cantidad: cantidadVendida,
             precioUnitario: receta.precioVenta,
-            subtotal: receta.precioVenta * Number.parseInt(detalle.cantidad),
+            subtotal: receta.precioVenta * cantidadVendida,
           },
         });
 
-        // Obtener ingredientes de la receta
+        // Obtener ingredientes de la receta (ahora incluyendo el costo unitario por ingrediente)
+        // Ya lo hicimos arriba, pero necesitamos la data de los ingredientes incluyendo su costo
         const ingredientes = await tx.recetaIngrediente.findMany({
-          where: { recetaId: Number.parseInt(detalle.recetaId) },
+          where: { recetaId: receta.id },
           include: { producto: true },
         });
 
         // Descontar cada ingrediente del inventario
         for (const ingrediente of ingredientes) {
-          const cantidadTotal =
-            ingrediente.cantidad * Number.parseInt(detalle.cantidad);
+          const cantidadTotalConsumida = ingrediente.cantidad * cantidadVendida;
 
-          // Verificar si hay suficiente stock
+          // 💡 Costo total de la materia prima consumida en este movimiento
+          // Costo total = cantidad de ingrediente consumida * Costo por Unidad Base (gr, ml, pz)
+          const costoMovimiento =
+            cantidadTotalConsumida * (ingrediente.costoUnitario || 0);
+
+          // Verificar si hay suficiente stock (la verificación original es correcta)
           const inventario = await tx.inventario.findUnique({
             where: { productoId: ingrediente.productoId },
           });
 
-          if (!inventario || inventario.cantidadActual < cantidadTotal) {
+          if (
+            !inventario ||
+            inventario.cantidadActual < cantidadTotalConsumida
+          ) {
             throw new Error(
               `Stock insuficiente de ${ingrediente.producto.nombre}. ` +
                 `Disponible: ${inventario?.cantidadActual || 0}, ` +
-                `Necesario: ${cantidadTotal}`
+                `Necesario: ${cantidadTotalConsumida}`
             );
           }
 
@@ -138,18 +163,19 @@ export async function POST(request: Request) {
             where: { productoId: ingrediente.productoId },
             data: {
               cantidadActual: {
-                decrement: cantidadTotal,
+                decrement: cantidadTotalConsumida,
               },
             },
           });
 
-          // Registrar movimiento de inventario
+          // Registrar movimiento de inventario (MODIFICADO para incluir costo)
           await tx.movimientoInventario.create({
             data: {
               productoId: ingrediente.productoId,
               tipo: "salida",
               categoria: "venta",
-              cantidad: -cantidadTotal,
+              cantidad: -cantidadTotalConsumida, // Cantidad en negativo para indicar salida
+              costoUnitario: costoMovimiento, // 💡 CAMBIO CLAVE: El costo total de este ingrediente consumido
               fecha: new Date(),
               referencia: `venta-${nuevaVenta.id}`,
               ventaRef: nuevaVenta.id,

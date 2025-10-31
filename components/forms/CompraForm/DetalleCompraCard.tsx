@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ProductoSearchSelect } from "./ProductoSearchSelect";
-import { Producto, DetalleCompra } from "./types";
+import { Producto, DetalleCompra } from "@/types";
 
 interface DetalleCompraCardProps {
-  detalle: DetalleCompra;
-  index: number;
-  productos: Producto[];
+  readonly detalle: DetalleCompra;
+  readonly index: number;
+  readonly productos: Producto[];
   onActualizarDetalle: (
     index: number,
     field: keyof DetalleCompra,

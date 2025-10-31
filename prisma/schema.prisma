@@ -19,40 +19,44 @@ enum CategoriaReceta {
 
 // Enum para unidades de medida
 enum UnidadMedida {
-  GR  @map("gr")
-  ML  @map("ml")
-  PZ  @map("pz")
+  GR  @map("gr")
+  ML  @map("ml")
+  PZ  @map("pz")
+  KG  @map("kg")  
+  L   @map("lt")   
 }
 
 // Enum para categorías de producto
 enum CategoriaProducto {
-  ALOE
-  TE @map("TÉ") // Usamos @map para el acento en la base de datos
-  MALTEADA
-  PROTEINA
-  EXTRA
+  ALOE
+  TE @map("TÉ")
+  MALTEADA
+  PROTEINA
+  EXTRA
+  INSUMO_PESO 
 }
 
 model Producto {
-  id                Int                    @id @default(autoincrement())
-  sku               String                 @unique
-  nombre            String
-  sabor             String?
-  proveedor         String?
-  precioUnitario    Float
-  peso              Float?
-  precioPorUnidad   Float?
-  unidad            UnidadMedida           @default(GR)
-  descripcion       String?
-  stockMinimo       Float?                 @default(5)
-  descripcionUmbral String?
-  createdAt         DateTime               @default(now())
-  categoria         CategoriaProducto      @default(EXTRA)
+  id                    Int                 @id @default(autoincrement())
+  sku                   String              @unique
+  nombre                String
+  sabor                 String?
+  proveedor             String?
+  precioUnitario        Float
+  peso                  Float?
+  precioPorUnidad       Float?
+  unidad                UnidadMedida        @default(GR)
+  descripcion           String?
+  stockMinimo           Float?              @default(5)
+  descripcionUmbral     String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt // 💡 ¡CAMBIO AÑADIDO!
+  categoria             CategoriaProducto   @default(EXTRA)
 
-  inventario         Inventario?
-  movimientos        MovimientoInventario[]
-  recetaIngredientes RecetaIngrediente[]
-  detallesCompra     DetalleCompra[]        @relation("ProductoDetalleCompra")
+  inventario            Inventario?
+  movimientos           MovimientoInventario[]
+  recetaIngredientes    RecetaIngrediente[]
+  detallesCompra        DetalleCompra[]     @relation("ProductoDetalleCompra")
 }
 
 model Inventario {
@@ -103,25 +107,27 @@ model DetalleCompra {
 }
 
 model Receta {
-  id            Int                 @id @default(autoincrement())
-  nombre        String
-  categoria     CategoriaReceta     @default(OTRO)
-  descripcion   String?
-  precioVenta   Float
-  imagen        String?
-  createdAt     DateTime            @default(now())
-  detallesVenta DetalleVenta[]
-  ingredientes  RecetaIngrediente[]
+  id                    Int                 @id @default(autoincrement())
+  nombre                String
+  categoria             CategoriaReceta     @default(OTRO)
+  descripcion           String?
+  precioVenta           Float
+  imagen                String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt // 💡 ¡CAMBIO AÑADIDO!
+  detallesVenta         DetalleVenta[]
+  ingredientes          RecetaIngrediente[]
 }
 
 model RecetaIngrediente {
-  id         Int          @id @default(autoincrement())
-  recetaId   Int
-  productoId Int
-  cantidad   Float
-  unidad     UnidadMedida
-  producto   Producto     @relation(fields: [productoId], references: [id], onDelete: Cascade)
-  receta     Receta       @relation(fields: [recetaId], references: [id], onDelete: Cascade)
+  id              Int             @id @default(autoincrement())
+  recetaId        Int
+  productoId      Int
+  cantidad        Float
+  unidad          UnidadMedida
+  costoUnitario   Float?          // 💡 ¡CAMBIO CRUCIAL AÑADIDO!
+  producto        Producto        @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  receta          Receta          @relation(fields: [recetaId], references: [id], onDelete: Cascade)
 }
 
 model Venta {

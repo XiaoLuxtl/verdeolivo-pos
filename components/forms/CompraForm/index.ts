@@ -4,4 +4,4 @@ export type {
   Producto,
   DetalleCompra,
   CompraFormData,
-} from "./types";
+} from "@/types";

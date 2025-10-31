@@ -1,19 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-type ReporteInventario = {
-  alertas: {
-    sinStock: Array<{ id: number; nombre: string; sku: string }>;
-    stockBajo: Array<{
-      id: number;
-      nombre: string;
-      sku: string;
-      stock: number;
-      unidad: string;
-    }>;
-  };
-};
+import { ReporteInventario } from "@/types";
 
 interface AlertasInventarioProps {
   reporteInventario: ReporteInventario | null;

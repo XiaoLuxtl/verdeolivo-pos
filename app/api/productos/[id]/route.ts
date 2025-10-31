@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET - Obtener un producto
+// GET - Obtener un producto (SIN CAMBIOS)
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -32,7 +32,7 @@ export async function GET(
   }
 }
 
-// PUT - Actualizar producto
+// PUT - Actualizar producto (MODIFICADO)
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -41,11 +41,26 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    // Calcular precio por unidad
+    // 💡 Eliminamos el recálculo del precioPorUnidad.
+    // Ahora, solo nos aseguramos de que todos los valores numéricos se parseen correctamente.
     const precioUnitarioNum = Number.parseFloat(body.precioUnitario);
     const pesoNum = body.peso ? Number.parseFloat(body.peso) : null;
-    const precioPorUnidad =
-      pesoNum && pesoNum > 0 ? precioUnitarioNum / pesoNum : precioUnitarioNum;
+    const precioPorUnidadNum = Number.parseFloat(body.precioPorUnidad);
+
+    // Validación básica de los nuevos campos numéricos
+    if (Number.isNaN(precioUnitarioNum) || Number.isNaN(precioPorUnidadNum)) {
+      return NextResponse.json(
+        {
+          error:
+            "El costo unitario y/o costo por unidad base deben ser números válidos.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Si el producto es un INSUMO_PESO, el frontend nos envía:
+    // - precioUnitarioNum: El costo total de la compra (ej: $24.00)
+    // - precioPorUnidadNum: El costo por la unidad base (ej: $0.04/gramo)
 
     const producto = await prisma.producto.update({
       where: { id: Number.parseInt(id) },
@@ -53,16 +68,16 @@ export async function PUT(
         sku: body.sku,
         nombre: body.nombre,
         sabor: body.sabor || null,
-        categoria: body.categoria, // ← Agregar esta línea
+        categoria: body.categoria,
         proveedor: body.proveedor || null,
         precioUnitario: precioUnitarioNum,
         peso: pesoNum,
-        precioPorUnidad: precioPorUnidad,
+        precioPorUnidad: precioPorUnidadNum, // <-- Usamos el valor ya calculado por el frontend
         unidad: body.unidad,
         descripcion: body.descripcion || null,
         stockMinimo: body.stockMinimo
           ? Number.parseFloat(body.stockMinimo)
-          : undefined,
+          : undefined, // Si no se envía, se mantiene el valor actual
         descripcionUmbral: body.descripcionUmbral || null,
       },
       include: {
@@ -93,7 +108,7 @@ export async function PUT(
   }
 }
 
-// DELETE - Eliminar producto
+// DELETE - Eliminar producto (SIN CAMBIOS)
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

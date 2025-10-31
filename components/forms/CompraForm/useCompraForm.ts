@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Producto, DetalleCompra, CompraFormData } from "./types";
+import { Producto, DetalleCompra, CompraFormData } from "@/types";
 
 // Función para generar IDs únicos
 export const generateId = (): string =>

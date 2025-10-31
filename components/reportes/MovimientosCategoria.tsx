@@ -1,16 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-type ReporteInventario = {
-  resumen: {
-    totalMovimientos: number;
-  };
-  movimientosPorCategoria: Array<{
-    categoria: string;
-    cantidad: number;
-    productos: number;
-  }>;
-};
+import { ReporteInventario } from "@/types";
 
 interface MovimientosCategoriaProps {
   reporteInventario: ReporteInventario | null;

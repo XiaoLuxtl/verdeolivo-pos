@@ -9,14 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-type ReporteVentas = {
-  topRecetas: Array<{
-    nombre: string;
-    cantidad: number;
-    ingresos: number;
-  }>;
-};
+import { ReporteVentas } from "@/types";
 
 interface TopRecetasTableProps {
   reporteVentas: ReporteVentas | null;

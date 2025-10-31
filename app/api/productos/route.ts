@@ -1,11 +1,29 @@
+// app/api/productos/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET - Listar todos los productos
+// GET - Listar todos los productos (MODIFICADO)
 export async function GET() {
   try {
     const productos = await prisma.producto.findMany({
-      include: {
+      // 💡 Se recomienda usar 'select' explícito para optimizar la respuesta
+      // y garantizar que se incluyan todos los campos que el frontend de Recetas necesita.
+      select: {
+        id: true,
+        sku: true,
+        nombre: true,
+        sabor: true,
+        categoria: true,
+        proveedor: true,
+        precioUnitario: true,
+        peso: true,
+        precioPorUnidad: true,
+        unidad: true,
+        descripcion: true,
+        stockMinimo: true,
+        descripcionUmbral: true,
+        createdAt: true,
+        updatedAt: true,
         inventario: true,
       },
       orderBy: {
@@ -22,27 +40,35 @@ export async function GET() {
   }
 }
 
-// POST - Crear producto
+// POST - Crear producto (SIN CAMBIOS ADICIONALES)
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Calcular precio por unidad
     const precioUnitarioNum = Number.parseFloat(body.precioUnitario);
     const pesoNum = body.peso ? Number.parseFloat(body.peso) : null;
-    const precioPorUnidad =
-      pesoNum && pesoNum > 0 ? precioUnitarioNum / pesoNum : precioUnitarioNum;
+    const precioPorUnidadNum = Number.parseFloat(body.precioPorUnidad);
+
+    if (Number.isNaN(precioUnitarioNum) || Number.isNaN(precioPorUnidadNum)) {
+      return NextResponse.json(
+        {
+          error:
+            "El costo unitario y/o costo por unidad base deben ser números válidos.",
+        },
+        { status: 400 }
+      );
+    }
 
     const producto = await prisma.producto.create({
       data: {
         sku: body.sku,
         nombre: body.nombre,
         sabor: body.sabor || null,
-        categoria: body.categoria, // ← Agregar esta línea
+        categoria: body.categoria,
         proveedor: body.proveedor || null,
         precioUnitario: precioUnitarioNum,
         peso: pesoNum,
-        precioPorUnidad: precioPorUnidad,
+        precioPorUnidad: precioPorUnidadNum,
         unidad: body.unidad,
         descripcion: body.descripcion || null,
         stockMinimo: body.stockMinimo ? Number.parseFloat(body.stockMinimo) : 5,
@@ -63,7 +89,6 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     console.error("Error al crear producto:", error);
 
-    // Verificar si es un error de Prisma con código P2002
     if (error instanceof Error && "code" in error) {
       const prismaError = error as { code?: string };
 

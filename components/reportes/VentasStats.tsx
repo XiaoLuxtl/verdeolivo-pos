@@ -1,13 +1,6 @@
 import { ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
-type ReporteVentas = {
-  resumen: {
-    totalVentas: number;
-    totalIngresos: number;
-    promedioVenta: number;
-  };
-};
+import { ReporteVentas } from "@/types";
 
 interface VentasStatsProps {
   reporteVentas: ReporteVentas | null;

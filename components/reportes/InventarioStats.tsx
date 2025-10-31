@@ -1,13 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-
-type ReporteInventario = {
-  resumen: {
-    totalProductos: number;
-    sinStock: number;
-    stockBajo: number;
-    totalMovimientos: number;
-  };
-};
+import { ReporteInventario } from "@/types";
 
 interface InventarioStatsProps {
   reporteInventario: ReporteInventario | null;

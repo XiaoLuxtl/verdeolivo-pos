@@ -1,7 +1,9 @@
+// app/api/recetas/[id]/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET - Obtener una receta
+// GET - Obtener una receta (MODIFICADO para incluir el Costo Total)
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -26,7 +28,18 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(receta);
+    // 💡 1. Calcular el Costo Total de la Receta
+    const costoTotalReceta = receta.ingredientes.reduce(
+      (sum, ingrediente) => sum + (ingrediente.costoUnitario || 0), // Suma el campo costoUnitario
+      0
+    );
+
+    // 2. Devolver la receta incluyendo el nuevo campo calculado
+    // Usamos el spread operator para añadir 'costoTotalReceta' a la respuesta JSON
+    return NextResponse.json({
+      ...receta,
+      costoTotalReceta: Number.parseFloat(costoTotalReceta.toFixed(4)), // Formatear a 4 decimales
+    });
   } catch (error) {
     console.error("Error al obtener receta:", error);
     return NextResponse.json(
