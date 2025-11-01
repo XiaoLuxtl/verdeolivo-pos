@@ -115,7 +115,7 @@ model Receta {
   imagen                String?
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt // 💡 ¡CAMBIO AÑADIDO!
-  detallesVenta         DetalleVenta[]
+  versiones             RecetaVersion[]
   ingredientes          RecetaIngrediente[]
 }
 
@@ -128,6 +128,36 @@ model RecetaIngrediente {
   costoUnitario   Float?          // 💡 ¡CAMBIO CRUCIAL AÑADIDO!
   producto        Producto        @relation(fields: [productoId], references: [id], onDelete: Cascade)
   receta          Receta          @relation(fields: [recetaId], references: [id], onDelete: Cascade)
+}
+
+model RecetaVersion {
+  id                    Int                      @id @default(autoincrement())
+  recetaId              Int
+  version               Int                      // Número de versión (1, 2, 3...)
+  nombre                String
+  categoria             CategoriaReceta
+  descripcion           String?
+  precioVenta           Float
+  imagen                String?
+  costoTotal            Float?                   // Costo total calculado de ingredientes
+  createdAt             DateTime                 @default(now())
+  receta                Receta                   @relation(fields: [recetaId], references: [id], onDelete: Cascade)
+  detallesVenta         DetalleVenta[]
+  ingredientes          RecetaVersionIngrediente[]
+
+  @@unique([recetaId, version])
+}
+
+model RecetaVersionIngrediente {
+  id              Int             @id @default(autoincrement())
+  recetaVersionId Int
+  productoId      Int
+  cantidad        Float
+  unidad          UnidadMedida
+  costoUnitario   Float           // Costo unitario en el momento de la versión
+  costoTotal      Float           // cantidad * costoUnitario
+  producto        Producto        @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  recetaVersion   RecetaVersion   @relation(fields: [recetaVersionId], references: [id], onDelete: Cascade)
 }
 
 model Venta {
@@ -149,13 +179,14 @@ model Venta {
 }
 
 model DetalleVenta {
-  id             Int     @id @default(autoincrement())
-  ventaId        Int
-  recetaId       Int
-  cantidad       Int
-  precioUnitario Float
-  subtotal       Float
-  movimientoRef  String?
-  receta         Receta  @relation(fields: [recetaId], references: [id], onDelete: Cascade)
-  venta          Venta   @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  id                Int            @id @default(autoincrement())
+  ventaId           Int
+  recetaVersionId   Int            // Referencia a la versión específica de la receta
+  cantidad          Int
+  precioUnitario    Float
+  costoUnitario     Float?         // Costo unitario de la receta en el momento de la venta
+  subtotal          Float
+  movimientoRef     String?
+  recetaVersion     RecetaVersion  @relation(fields: [recetaVersionId], references: [id], onDelete: Restrict)
+  venta             Venta          @relation(fields: [ventaId], references: [id], onDelete: Cascade)
 }

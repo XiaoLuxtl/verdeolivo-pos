@@ -1,5 +1,6 @@
 // Hook personalizado para manejar categorías de productos
 import { useMemo } from "react";
+import { Receta } from "./useRecetas";
 
 export type CategoriaConfig = {
   color: string;
@@ -8,15 +9,6 @@ export type CategoriaConfig = {
   icon: string;
   nombre: string;
   prioridad: number;
-};
-
-export type Receta = {
-  id: number;
-  nombre: string;
-  categoria: string | null;
-  precioVenta: number;
-  imagen: string | null;
-  ingredientes: any[];
 };
 
 // Configuración de categorías con prioridades

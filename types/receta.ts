@@ -22,3 +22,18 @@ export interface IngredienteFormData {
   cantidad: string;
   unidad: string;
 }
+
+export interface IngredienteReceta {
+  id: number;
+  cantidad: number;
+  producto: {
+    id: number;
+    nombre: string;
+    unidad: string;
+    precioUnitario: number;
+  };
+}
+
+export interface RecetaConIngredientes extends Receta {
+  ingredientes: IngredienteReceta[];
+}
