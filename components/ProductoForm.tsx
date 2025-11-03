@@ -150,7 +150,7 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
         setFormData((prev) => ({
           ...prev,
           // precioPorUnidad guarda el costo por GR/ML (el que va al inventario)
-          precioPorUnidad: precioPorUnidadBase.toFixed(4),
+          precioPorUnidad: precioPorUnidadBase.toFixed(2),
           // precioUnitario guarda el costo total de esta compra
           precioUnitario: precioTotalEstimado.toFixed(2),
         }));
@@ -173,7 +173,7 @@ export default function ProductoForm({ producto, onClose, onSave }: Props) {
         setFormData((prev) => ({
           ...prev,
           // precioPorUnidad es el costo de la pieza/unidad
-          precioPorUnidad: precioPorUnidad.toFixed(4),
+          precioPorUnidad: precioPorUnidad.toFixed(2),
         }));
       } else {
         setFormData((prev) => ({

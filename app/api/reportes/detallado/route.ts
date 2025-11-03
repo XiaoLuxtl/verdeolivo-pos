@@ -108,8 +108,9 @@ export async function GET(request: Request) {
       include: {
         detalles: {
           include: {
-            receta: {
+            recetaVersion: {
               include: {
+                receta: true,
                 ingredientes: {
                   include: {
                     producto: true,
@@ -154,11 +155,11 @@ export async function GET(request: Request) {
         total: venta.total,
         metodoPago: venta.metodoPago,
         detalles: venta.detalles.map((detalle) => ({
-          receta: detalle.receta.nombre,
+          receta: detalle.recetaVersion.nombre,
           cantidad: detalle.cantidad,
           precioUnitario: detalle.precioUnitario,
           subtotal: detalle.subtotal,
-          ingredientes: detalle.receta.ingredientes.map((ing) => ({
+          ingredientes: detalle.recetaVersion.ingredientes.map((ing) => ({
             producto: ing.producto.nombre,
             cantidadNecesaria: ing.cantidad * detalle.cantidad,
             unidad: ing.unidad,
@@ -178,7 +179,7 @@ export async function GET(request: Request) {
 
     for (const venta of ventas) {
       for (const detalle of venta.detalles) {
-        for (const ingrediente of detalle.receta.ingredientes) {
+        for (const ingrediente of detalle.recetaVersion.ingredientes) {
           const cantidadGastada = ingrediente.cantidad * detalle.cantidad;
           // Usar precio por unidad pre-calculado
           const costoGastado =

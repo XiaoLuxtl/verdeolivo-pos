@@ -19,6 +19,7 @@ import {
 import { ProductoSearchSelect } from "@/components/forms/CompraForm/ProductoSearchSelect";
 
 import { Producto, UnidadMedida, IngredienteFormData } from "@/types";
+import { Ingrediente } from "./IngredientesModal";
 
 interface Props {
   readonly recetaId: number;
@@ -26,6 +27,7 @@ interface Props {
   readonly onSuccess: () => void;
   readonly onCancel: () => void;
   readonly onError: (message: string) => void;
+  readonly ingrediente?: Ingrediente; // Para edición
 }
 
 export default function IngredienteForm({
@@ -34,11 +36,23 @@ export default function IngredienteForm({
   onSuccess,
   onCancel,
   onError,
+  ingrediente,
 }: Props) {
-  const [formData, setFormData] = useState<IngredienteFormData>({
-    productoId: "",
-    cantidad: "",
-    unidad: "GR",
+  const [formData, setFormData] = useState<IngredienteFormData>(() => {
+    if (ingrediente) {
+      // Modo edición: inicializar con datos del ingrediente
+      return {
+        productoId: ingrediente.producto.id.toString(),
+        cantidad: ingrediente.cantidad.toString(),
+        unidad: ingrediente.unidad,
+      };
+    }
+    // Modo creación: valores por defecto
+    return {
+      productoId: "",
+      cantidad: "",
+      unidad: "GR",
+    };
   });
 
   const unidadesDisponibles = useMemo(
@@ -72,7 +86,7 @@ export default function IngredienteForm({
     return null;
   }, [formData]);
 
-  const handleAddIngrediente = async (e: React.FormEvent) => {
+  const handleSubmitIngrediente = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const errorValidacion = validarFormulario();
@@ -88,8 +102,14 @@ export default function IngredienteForm({
         cantidad: Number.parseFloat(formData.cantidad),
       };
 
-      const response = await fetch(`/api/recetas/${recetaId}/ingredientes`, {
-        method: "POST",
+      const url = ingrediente
+        ? `/api/recetas/${recetaId}/ingredientes/${ingrediente.id}`
+        : `/api/recetas/${recetaId}/ingredientes`;
+
+      const method = ingrediente ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -101,7 +121,10 @@ export default function IngredienteForm({
         );
       }
 
-      setFormData({ productoId: "", cantidad: "", unidad: "GR" });
+      // Solo limpiar el form en modo creación
+      if (!ingrediente) {
+        setFormData({ productoId: "", cantidad: "", unidad: "GR" });
+      }
       onSuccess();
     } catch (err) {
       const errorMessage =
@@ -114,10 +137,12 @@ export default function IngredienteForm({
   return (
     <Card className="mb-4">
       <CardHeader>
-        <CardTitle className="text-lg">Nuevo Ingrediente</CardTitle>
+        <CardTitle className="text-lg">
+          {ingrediente ? "Editar Ingrediente" : "Nuevo Ingrediente"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleAddIngrediente}>
+        <form onSubmit={handleSubmitIngrediente}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="producto">Producto *</Label>
@@ -205,7 +230,7 @@ export default function IngredienteForm({
           <div className="flex gap-2 mt-4">
             <Button type="submit" variant="default" size="sm">
               <Plus className="w-4 h-4 mr-2" />
-              Agregar Ingrediente
+              {ingrediente ? "Actualizar Ingrediente" : "Agregar Ingrediente"}
             </Button>
             <Button
               type="button"

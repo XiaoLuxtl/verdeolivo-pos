@@ -13,7 +13,7 @@ export default function IngredientesCostSummary({ costoTotal }: Props) {
         <CardTitle className="text-xl text-green-800 flex items-center justify-between">
           Costo Total de Materia Prima
           <span className="text-2xl font-extrabold">
-            ${costoTotal.toFixed(4)}{" "}
+            ${(Math.ceil(costoTotal * 100) / 100).toFixed(2)}{" "}
             {/* Usamos 4 decimales para mayor precisión */}
           </span>
         </CardTitle>

@@ -47,6 +47,8 @@ export default function IngredientesModal({
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingIngrediente, setEditingIngrediente] =
+    useState<Ingrediente | null>(null);
   const [error, setError] = useState<string>("");
 
   const fetchData = useCallback(async () => {
@@ -112,6 +114,22 @@ export default function IngredientesModal({
     }
   };
 
+  const handleEditIngrediente = (ingrediente: Ingrediente) => {
+    setEditingIngrediente(ingrediente);
+    setShowForm(true);
+  };
+
+  const handleFormSuccess = () => {
+    fetchData();
+    setShowForm(false);
+    setEditingIngrediente(null);
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setEditingIngrediente(null);
+  };
+
   if (loading) {
     return (
       <Dialog open={true} onOpenChange={() => {}}>
@@ -164,11 +182,9 @@ export default function IngredientesModal({
             <IngredienteForm
               recetaId={recetaId}
               productos={productos}
-              onSuccess={() => {
-                fetchData();
-                setShowForm(false);
-              }}
-              onCancel={() => setShowForm(false)}
+              ingrediente={editingIngrediente || undefined}
+              onSuccess={handleFormSuccess}
+              onCancel={handleFormCancel}
               onError={setError}
             />
           )}
@@ -185,6 +201,7 @@ export default function IngredientesModal({
                   key={ing.id}
                   ingrediente={ing}
                   onDelete={handleDeleteIngrediente}
+                  onEdit={handleEditIngrediente}
                 />
               ))
             )}

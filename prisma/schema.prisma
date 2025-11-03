@@ -57,6 +57,7 @@ model Producto {
   movimientos           MovimientoInventario[]
   recetaIngredientes    RecetaIngrediente[]
   detallesCompra        DetalleCompra[]     @relation("ProductoDetalleCompra")
+  versionesIngredientes RecetaVersionIngrediente[]
 }
 
 model Inventario {

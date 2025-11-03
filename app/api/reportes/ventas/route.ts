@@ -212,7 +212,11 @@ export async function GET(request: Request) {
       include: {
         detalles: {
           include: {
-            receta: true,
+            recetaVersion: {
+              include: {
+                receta: true,
+              },
+            },
           },
         },
       },

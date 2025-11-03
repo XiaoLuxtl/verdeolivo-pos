@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createRecipeVersion } from "@/lib/recipeVersioning";
 
 // GET - Obtener una receta (MODIFICADO para incluir el Costo Total)
 export async function GET(
@@ -76,6 +77,9 @@ export async function PUT(
       },
     });
 
+    // Crear una nueva versión de la receta para preservar el histórico
+    await createRecipeVersion(Number.parseInt(id));
+
     return NextResponse.json(receta);
   } catch (error) {
     console.error("Error al actualizar receta:", error);
@@ -93,9 +97,13 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    // Verificar si la receta tiene ventas
+    // Verificar si la receta tiene ventas a través de sus versiones
     const ventasCount = await prisma.detalleVenta.count({
-      where: { recetaId: Number.parseInt(id) },
+      where: {
+        recetaVersion: {
+          recetaId: Number.parseInt(id),
+        },
+      },
     });
 
     if (ventasCount > 0) {

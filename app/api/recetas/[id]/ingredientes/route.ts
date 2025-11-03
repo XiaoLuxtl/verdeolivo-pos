@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createRecipeVersion } from "@/lib/recipeVersioning";
 
 // POST - Agregar ingrediente a receta (MODIFICADO para incluir el cálculo de costos)
 export async function POST(
@@ -48,6 +49,9 @@ export async function POST(
         producto: true,
       },
     });
+
+    // Crear nueva versión de la receta al agregar ingredientes
+    await createRecipeVersion(parseInt(recetaId));
 
     return NextResponse.json(ingrediente);
   } catch (error) {

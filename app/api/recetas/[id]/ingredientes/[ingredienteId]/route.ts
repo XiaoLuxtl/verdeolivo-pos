@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createRecipeVersion } from "@/lib/recipeVersioning";
 
 // DELETE - Eliminar ingrediente
 export async function DELETE(
@@ -9,10 +10,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; ingredienteId: string }> }
 ) {
   try {
-    const { ingredienteId } = await params;
+    const { id: recetaId, ingredienteId } = await params;
     await prisma.recetaIngrediente.delete({
       where: { id: parseInt(ingredienteId) },
     });
+
+    // Crear nueva versión de la receta al eliminar ingredientes
+    await createRecipeVersion(parseInt(recetaId));
 
     return NextResponse.json({ message: "Ingrediente eliminado" });
   } catch (error) {
@@ -30,7 +34,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string; ingredienteId: string }> }
 ) {
   try {
-    const { ingredienteId } = await params;
+    const { id: recetaId, ingredienteId } = await params;
     const body = await request.json();
 
     const ingrediente = await prisma.recetaIngrediente.update({
@@ -43,6 +47,9 @@ export async function PUT(
         producto: true,
       },
     });
+
+    // Crear nueva versión de la receta al modificar ingredientes
+    await createRecipeVersion(parseInt(recetaId));
 
     return NextResponse.json(ingrediente);
   } catch (error) {

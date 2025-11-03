@@ -1,6 +1,6 @@
 // components/recetas/ingredientes/IngredienteCard.tsx
 
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Ingrediente } from "./IngredientesModal"; // Importar tipo
@@ -8,9 +8,14 @@ import { Ingrediente } from "./IngredientesModal"; // Importar tipo
 interface Props {
   readonly ingrediente: Ingrediente;
   readonly onDelete: (ingredienteId: number) => void;
+  readonly onEdit: (ingrediente: Ingrediente) => void;
 }
 
-export default function IngredienteCard({ ingrediente, onDelete }: Props) {
+export default function IngredienteCard({
+  ingrediente,
+  onDelete,
+  onEdit,
+}: Props) {
   // 💡 Cálculo del costo individual
   const costoIngrediente =
     ingrediente.cantidad * (ingrediente.producto.precioPorUnidad || 0);
@@ -24,18 +29,29 @@ export default function IngredienteCard({ ingrediente, onDelete }: Props) {
             {ingrediente.cantidad.toFixed(2)} {ingrediente.unidad.toLowerCase()}
           </p>
           <p className="text-xs text-green-600 font-medium mt-1">
-            Costo: **${costoIngrediente.toFixed(4)}**
+            Costo: ${costoIngrediente.toFixed(2)}
           </p>
         </div>
-        <Button
-          type="button"
-          onClick={() => onDelete(ingrediente.id)}
-          variant="destructive"
-          size="sm"
-          aria-label={`Eliminar ingrediente ${ingrediente.producto.nombre}`}
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            onClick={() => onEdit(ingrediente)}
+            variant="outline"
+            size="sm"
+            aria-label={`Editar ingrediente ${ingrediente.producto.nombre}`}
+          >
+            <Edit className="w-4 h-4" />
+          </Button>
+          <Button
+            type="button"
+            onClick={() => onDelete(ingrediente.id)}
+            variant="destructive"
+            size="sm"
+            aria-label={`Eliminar ingrediente ${ingrediente.producto.nombre}`}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

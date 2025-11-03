@@ -1,6 +1,7 @@
 // Ruta: app/api/ventas/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentRecipeVersion } from "@/lib/recipeVersioning";
 
 // GET - Listar ventas
 export async function GET() {
@@ -9,7 +10,11 @@ export async function GET() {
       include: {
         detalles: {
           include: {
-            receta: true,
+            recetaVersion: {
+              include: {
+                receta: true,
+              },
+            },
           },
         },
       },
@@ -115,14 +120,18 @@ export async function POST(request: Request) {
         const { receta, cantidad, costoMateriaPrimaUnitario } = detalleConCosto;
         const cantidadVendida = Number.parseInt(cantidad);
 
+        // Obtener la versión actual de la receta
+        const recetaVersion = await getCurrentRecipeVersion(receta.id);
+
         // Crear detalle de venta
         await tx.detalleVenta.create({
           data: {
             ventaId: nuevaVenta.id,
-            recetaId: receta.id,
+            recetaVersionId: recetaVersion.id,
             cantidad: cantidadVendida,
-            precioUnitario: receta.precioVenta,
-            subtotal: receta.precioVenta * cantidadVendida,
+            precioUnitario: recetaVersion.precioVenta,
+            costoUnitario: recetaVersion.costoTotal,
+            subtotal: recetaVersion.precioVenta * cantidadVendida,
           },
         });
 
@@ -190,8 +199,9 @@ export async function POST(request: Request) {
         include: {
           detalles: {
             include: {
-              receta: {
+              recetaVersion: {
                 include: {
+                  receta: true,
                   ingredientes: true,
                 },
               },
